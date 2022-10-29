@@ -11,6 +11,8 @@ from ase.io.trajectory import Trajectory
 from pymatgen.core import Molecule
 import pymatgen.io.ase as pyase 
 from pymatgen.io.ase import AseAtomsAdaptor
+from jupyter_dash import JupyterDash
+
 
 app = dash.Dash(assets_folder=SETTINGS.ASSETS_PATH)
 server = app.server
@@ -28,51 +30,55 @@ colors = {
 }
 
 
-folders = data().complete_folders
-allfiles = data().complete_files
-file = data().return_data(allfiles[0])
-traj = Trajectory(file)[-1]
-atoms = pyase.Atoms(traj)
+structure_component = ctc.StructureMoleculeComponent(
+    show_compass=False,
+    bonded_sites_outside_unit_cell=True,
+    scene_settings={"zoomToFit2D": True},
+)
 
-structure = AseAtomsAdaptor.get_structure(atoms)
-# create our crystal structure using pymatgen
 
-# create the Crystal Toolkit component
-structure_component = ctc.StructureMoleculeComponent(structure, id="structure")
-
-# add the component's layout to our app's layout
 my_layout = html.Div(
     [
-html.H1(children="Dr Raul's research group", style={'backgroundColor': colors['background'],'textAlign': 'center','color': colors['text'],'font-size': '30px',}),
-html.Div(children='Select Folder', style={
-        'font-style': 'italic',
-        'font-weight': 'bold','width': '50%','display':'inline-block',
-    }),
+#html.H1(children="Dr Raul's research group", style={'backgroundColor': colors['background'],'textAlign': 'center','color': colors['text'],'font-size': '30px',}),
+# html.Div(children='Select Folder', style={
+#         'font-style': 'italic',
+#         'font-weight': 'bold','width': '50%','display':'inline-block',
+#     }),
 html.Div([
-dcc.Dropdown(
-                data().folders,
-                'Select Structure',
-                id='select-folder'
-            ),
+  dcc.Dropdown(id='folder-container',
+                options=[{'label':folder, 'value':folder } for folder in data().complete_folders
+]),
     ],style={'width': '50%','display':'inline-block',}
  ),
- html.Div(id='dropdown-container-output'),
-
- html.H1([structure_component.layout()],style={'width': '50%','display':'inline-block','align':'right'}),],
+html.Div([dcc.Dropdown(id='file-select')],style={'width': '50%','display':'inline-block',}),
+structure_component.layout()],
 )
 
 
 # # as explained in "preamble" section in documentation
+
+@app.callback(Output('file-select','options'),
+               Input('folder-container','value'))
+def display_dropdowns(value):
+    return [i for i in data().get_list_samples(value)]
+@app.callback(Output('struct','imageRequest'),
+              Input('file-select','value'))
+def return_structure(value):
+    if value:
+        structure_name = value
+        traj = Trajectory(structure_name)[-1]
+        atoms = pyase.Atoms(traj)
+        structure = AseAtomsAdaptor.get_structure(atoms)
+        structure_component = ctc.StructureMoleculeComponent(structure, id="struct")
+    else: 
+         default_structure=Structure(Lattice.cubic(5), ["K", "Cl"], [[0, 0, 0], [0.5, 0.5, 0.5]]),
+         structure_component = ctc.StructureMoleculeComponent(default_structure, id="struct")
+
+    return structure_component.layout()
+
+
 ctc.register_crystal_toolkit(app,layout=my_layout)
 
-@app.callback(
-    Output('select-folder', 'value'),
-    Input('select-file', 'value'),)
-def display_output(values):
-    return html.Div([
-        html.Div('Dropdown {} = {}'.format(i + 1, value))
-        for (i, value) in enumerate(data().get_list_samples(values))
-    ])
 
 if __name__ == "__main__":
     app.run_server(host='0.0.0.0', port=1115, debug=True)
