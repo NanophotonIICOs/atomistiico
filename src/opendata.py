@@ -26,7 +26,8 @@ class data:
         for folderi in self.complete_folders:
             if folder in folderi:
                 for filesinto in glob(folderi+'/*.traj'):
-                    self.folder_samples.append(filesinto.split(self.path)[-1].split('/')[-1])
+                    #self.folder_samples.append(filesinto.split(self.path)[-1].split('/')[-1])
+                    self.folder_samples.append(filesinto)
         return self.folder_samples
 
 
