@@ -11,6 +11,8 @@ from crystal_toolkit.settings import SETTINGS
 from ase.io.trajectory import Trajectory
 from ase.visualize import view
 from opendata import data
+import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import ThemeSwitchAIO
 
 
 app = dash.Dash(prevent_initial_callbacks=True)
@@ -36,7 +38,7 @@ colors = {
 # )
 structure_component = ctc.StructureMoleculeComponent( show_compass=False,
     bonded_sites_outside_unit_cell=True,
-    scene_settings={"zoomToFit2D": True},id="my_structure")
+    scene_settings={"zoomToFit2D": False},id="my_structure")
 
 
 # def get_struct(value):
@@ -69,7 +71,8 @@ html.Div(
             style={'width': '50%','display':'inline-block',}
         ),
 html.H1("Structure"),
-structure_component.layout()
+structure_component.layout(),
+# dcc.Slider(id='my-slider'),
 ]
 )
 
@@ -84,7 +87,7 @@ def display_dropdowns(value):
 @app.callback(Output(structure_component.id(),"data"),
               Input("file-select","value"))
 def update_structure(value):
-    atoms = Trajectory(value)[-1]
+    atoms = Trajectory(value)[0:2]
     structure = AseAtomsAdaptor.get_structure(atoms)
     structure_component = ctc.StructureMoleculeComponent(structure,id="my_structure")
     return  structure
@@ -92,4 +95,4 @@ def update_structure(value):
 
 ctc.register_crystal_toolkit(app=app, layout=my_layout)
 if __name__ == "__main__":
-    app.run_server(host='0.0.0.0', port=1115, debug=False)
+    app.run_server(host='localhost', port=3333, debug=True)
