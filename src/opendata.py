@@ -20,14 +20,17 @@ class data:
             for filesinto in glob(folder+'/*.traj'):
                 self.complete_files.append(filesinto)
 
+   
     def get_list_samples(self,folder):
         npath = self.path+'/'+folder
         self.folder_samples=[]
         for folderi in self.complete_folders:
             if folder in folderi:
-                for filesinto in glob(folderi+'/*.traj'):
+                for (path,dir,files) in os.walk(folder):
+                    for filesinto in glob(path+'/*.traj'):
                     #self.folder_samples.append(filesinto.split(self.path)[-1].split('/')[-1])
-                    self.folder_samples.append(filesinto)
+                        self.folder_samples.append(filesinto)
+
         return self.folder_samples
 
 
