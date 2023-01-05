@@ -22,15 +22,19 @@ class Bands:
             raise FileNotFoundError(f'The {path_to_files} does not exist')
         
         self.files = sorted([i for i in glob.glob(self.abspath_to_files+'/*.gpw')])
-        self.df_files = pd.DataFrame(self.files,columns=['File'])
-        files_to_dframe = [f.split('/')[-1] for f in self.files]
-        df_to_display = pd.DataFrame(files_to_dframe,columns=['File'])
-        print(df_to_display.to_string())
+        self._df_files = pd.DataFrame(self.files,columns=['File'])
+        _files_to_dframe = [f.split('/')[-1] for f in self.files]
+        _df_to_display = pd.DataFrame(_files_to_dframe,columns=['File'])
+        print(_df_to_display.to_string())
     
-    def get_bands(self,nofile):
-        choice_file = self.df_files['File'].iloc[nofile]    
+    def get_bands(self,nofile) -> np.array:
+        choice_file = self._df_files['File'].iloc[nofile]    
         self.calc_bands = GPAW(choice_file)
         
+    
+    def get_dframe(self):
+        
+        return self._df_files
         
         
         
