@@ -27,7 +27,6 @@ function update_parameters(params::Dict, key, value)
     end
 end
 
-
 function plot_params(params::Dict)
     params_default = default_params
     for (key,value) in params_default
