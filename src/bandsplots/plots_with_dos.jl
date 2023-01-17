@@ -207,7 +207,7 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                         "scatter/use mapped color={draw=red,fill=red,fill opacity=1}",
                         "scatter src=x",
                         "mark options={line width=1pt}",
-                        raw"visualization depends on={cos(deg(y)*-2) \as \perpointmarksize}",
+                        raw"visualization depends on={cos(deg(y)*-1)*2 \as \perpointmarksize}",
                         raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                         forget_plot
                     },Table("x"=>bands[1,:,1],"y"=>bands[1,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],
@@ -231,7 +231,7 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                         "scatter/use mapped color={draw=blue,fill=blue,fill opacity=1}",
                         "scatter src=x",
                         "mark options={line width=1pt}",
-                        raw"visualization depends on={cos(deg(y)*-2)  \as \perpointmarksize}",
+                        raw"visualization depends on={cos(deg(y)*-1)/2  \as \perpointmarksize}",
                         raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                         forget_plot
                     },Table({"meta=y"},"x"=>bands[2,:,1],"y"=>bands[2,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],

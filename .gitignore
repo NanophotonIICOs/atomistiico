@@ -131,3 +131,4 @@ dmypy.json
 notebooks/visualization.ipynb
 notebooks/json
 notebooks/julia-plots.ipynb
+notebooks/*

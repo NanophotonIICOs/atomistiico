@@ -1,15 +1,14 @@
 import json
 import os 
-from utils import create_dir
+from utils import make_dir
 from typing import Any, Dict
 
-
-def calc2json(results:Dict[str, Any],filename,dir="json"): 
-    create_dir(dir)
+def calc2json(results:Dict[str, Any],filename,dirsave="json"): 
+    make_dir(dirsave)
     if ".gpw" in filename:
-        filename = f"{dir}/{filename.split('.gpw')[0]}.json"
+        filename = f"{dirsave}/{filename.split('.gpw')[0]}.json"
     else:
-        filename = f"{dir}/{filename}.json"
+        filename = f"{dirsave}/{filename}.json"
         
     json_data = json.dumps(results)
     with open(filename, "w") as f:

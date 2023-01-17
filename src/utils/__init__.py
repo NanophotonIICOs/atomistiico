@@ -5,7 +5,7 @@ import numpy as no
 import json
 from ase.utils import jsonable
 
-def create_dir(folder):
+def make_dir(folder):
     if os.path.exists(folder):
         print(f"{folder} dir already exist!")
     else:
