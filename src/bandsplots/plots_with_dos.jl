@@ -8,14 +8,14 @@ function plotwdos(dir_calc::String,params::Dict)
     dos         = np.array(data["dos"])
     xtickcoords = data["label_xcoords"]
     plot_title  = data["name"]
-    parameters = plot_params(default_params)
+    parameters = plot_params(params)
     update_parameters(parameters,"xmin",float(xtickcoords[1]))
     update_parameters(parameters,"xmax",float(xtickcoords[end]))
     dos_up_max, dos_down_max = data["dos_max"]
     #fermi level coordinates
     xf = [parameters["xmin"],parameters["xmax"]]
     yf = [0,0] 
-
+    psize = 0.5
     if parameters["initial_band"] > size(bands,3)
         update_parameters(parameters,"initial_band",2)
         println("The number of initial band is greath than size of bands array") 
@@ -57,7 +57,7 @@ function plotwdos(dir_calc::String,params::Dict)
             xticklabels =data["x_labels"],
             xmajorgrids,
             "major x grid style={gray,thick}",
-            ylabel = L"$\epsilon - \epsilon_{F}$ (eV)",
+            ylabel = L"$E - E_{F}$ (eV)",
             #Legend style
             "every axis legend/.style" = "{
                                             cells={anchor=center},
@@ -129,14 +129,14 @@ function plotwdosbubble(dir_calc::String,params::Dict)
     dos         = np.array(data["dos"])
     xtickcoords = data["label_xcoords"]
     plot_title  = data["name"]
-    parameters = plot_params(default_params)
+    parameters = plot_params(params)
     update_parameters(parameters,"xmin",float(xtickcoords[1]))
     update_parameters(parameters,"xmax",float(xtickcoords[end]))
     dos_up_max, dos_down_max = data["dos_max"]
     #fermi level coordinates
     xf = [parameters["xmin"],parameters["xmax"]]
     yf = [0,0] 
-    
+    psize = 0.5
     if parameters["initial_band"] > size(bands,3)
         update_parameters(parameters,"initial_band",2)
         println("The number of initial band is greath than size of bands array") 
@@ -205,19 +205,19 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                         "mark=*",
                         "only marks",
                         "scatter/use mapped color={draw=red,fill=red,fill opacity=1}",
-                        "scatter src=x",
+                        "scatter src=y",
                         "mark options={line width=1pt}",
-                        raw"visualization depends on={cos(deg(y)*-1)*2 \as \perpointmarksize}",
+                        raw"visualization depends on={1-sin(deg(y)) \as \perpointmarksize}",
                         raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                         forget_plot
-                    },Table("x"=>bands[1,:,1],"y"=>bands[1,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],
+                    },Table({"meta=y"},"x"=>bands[1,:,1],"y"=>bands[1,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],
             Plot({ "scatter",
                     "mark=*",
                     "only marks",
                     "scatter/use mapped color={draw=red,fill=red}",
-                    "scatter src=x",
+                    "scatter src=y",
                     "mark options={draw=red,fill=red,line width=1pt}",
-                    raw"visualization depends on={cos(deg(y)*-2)  \as \perpointmarksize}",
+                    raw"visualization depends on={1*cos(deg(y)*-1) \as \perpointmarksize}",
                     raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                  },Table("x"=>bands[1,:,1],"y"=>bands[1,:,parameters["final_band"]])),
             LegendEntry(L"\color{red}{Spin $\uparrow$}"),
@@ -229,9 +229,9 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                         "mark=*",
                         "only marks",
                         "scatter/use mapped color={draw=blue,fill=blue,fill opacity=1}",
-                        "scatter src=x",
+                        "scatter src=y",
                         "mark options={line width=1pt}",
-                        raw"visualization depends on={cos(deg(y)*-1)/2  \as \perpointmarksize}",
+                        raw"visualization depends on={1+sin(deg(y))  \as \perpointmarksize}",
                         raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                         forget_plot
                     },Table({"meta=y"},"x"=>bands[2,:,1],"y"=>bands[2,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],
@@ -241,7 +241,7 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                     "scatter src=x",
                     "scatter/use mapped color={draw=blue,fill=blue}",
                     "mark options={draw=blue,fill=blue,line width=1pt}",
-                    raw"visualization depends on={cos(deg(y)*-2)  \as \perpointmarksize}",
+                    raw"visualization depends on={2*cos(deg(y)*-1)  \as \perpointmarksize}",
                     raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                  },Table("x"=>bands[1,:,1],"y"=>bands[1,:,parameters["final_band"]])),
             LegendEntry(L"\color{blue}{Spin $\downarrow$}"),

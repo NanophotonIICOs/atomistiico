@@ -5,7 +5,6 @@ using PyCall
 using DataFrames
 include("export_plots.jl")
 include("parameters.jl")
-actual_dir = pwd()
 
 # function read_default_params(params::String)
 #     if isfile(actual_dir*"/"*params)
@@ -28,8 +27,7 @@ function update_parameters(params::Dict, key, value)
 end
 
 function plot_params(params::Dict)
-    params_default = default_params
-    for (key,value) in params_default
+    for (key,value) in default_params
         if !haskey(params,key)
             params[key] = value
         end
