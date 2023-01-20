@@ -83,17 +83,22 @@ class Bands:
         
     def get_calc(self,nofile:int):
         file = self._select_file(nofile)
-        print(f"You chose {file['file']}")  
+        print(f"You chose {self._df_to_display['gpw File'].iloc[nofile]}")  
         
         from gpaw import GPAW   #type: ignore
         self._calc_  = GPAW(file['file'])
         return self._calc_ , file['file'], file['name'], nofile
     
-    def _get_dos(self,bands,ef,no_of_spins)->tuple:
+    def _get_dos(self,bands,ef,no_of_spins,**kwargs)->tuple:
         # export dos    
-        e_up, self.dos_up     = bands.get_dos(spin=self.spin_up)      #pyright: ignore
-        e_down, self.dos_down = bands.get_dos(spin=self.spin_down)  #pyright: ignore
+        try:
+            npts = kwargs.pop('npts',2001)
+            width = kwargs.pop('width',None)
+        except Exception as e:
+            raise ValueError("There is an error in the get_dos arguments from **kwargs, verify if it these are correct")      
         
+        e_up, self.dos_up     = bands.get_dos(spin=self.spin_up,npts=npts,width=width)      
+        e_down, self.dos_down = bands.get_dos(spin=self.spin_down,npts=npts,width=width)  
         self.dos_array = np.zeros((no_of_spins,len(e_up),2))
         self.dos_array[0,:,0] = e_up-ef
         self.dos_array[0,:,1] = self.dos_up 
@@ -118,10 +123,10 @@ class Bands:
         self._calc_, self.ch_file, self._calc_name_ , nofile = calc
         if fixed:
             filename = 'fixed_'+self.files_to_dframe[nofile]
-            print(filename)
             _calc_bands = self.get_fixed(**kwargs)
         else:
             filename  = self.files_to_dframe[nofile]
+            print(filename)
             _calc_bands = self._calc_
             
         
@@ -132,9 +137,9 @@ class Bands:
         energies         = self.bs.energies-self.fermi_level
         no_of_bands      = _calc_bands.get_number_of_bands()    #pyright: ignore
                 
+                
         #from gpaw documentation.
         self.xcoords, label_xcoords, x_labels = self.bs.get_labels()
-        e_range          = len(self.xcoords)
         self.ekn_array = np.zeros(( no_of_spins,len(self.xcoords),no_of_bands))
 
         x_labels = [i if 'K' not in i else "K" for i in x_labels ]
@@ -193,10 +198,18 @@ class Bands:
         lsymbs = len(self.pdos_symbols)
         
     def get_fixed(self,**kwargs):
-        path = kwargs.pop('path','XGX1X')
-        npoints = kwargs.pop('npoints',150)       
+        # for key in kwargs:
+        #     if key not in {'kpts','path'}:
+        #         raise TypeError(f'Cannot change {key!r} in ''fixed_density calculation!')
+    
+        try:
+            path = kwargs.pop('path','XGX1X')
+            npoints = kwargs.pop('npoints',100)
+        except Exception as e:
+            raise ValueError("There is an error in the path, verify if it is correct")      
+        
         self.bp  = self._calc_.atoms.cell.bandpath(path=path,npoints=npoints)  #pyright: ignore
-        self._fixed_calc = self._calc_.fixed_density(kpts=self.bp,**kwargs)    #pyright: ignore
+        self._fixed_calc = self._calc_.fixed_density(kpts=self.bp)             #pyright: ignore
         return self._fixed_calc
         
         
