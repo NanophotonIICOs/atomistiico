@@ -11,9 +11,10 @@ from gpaw import GPAW
 from tabulate import tabulate 
 from collections import namedtuple
 
-def  check_files(path_to_files):
+
+def check_files(path_to_files):
     if os.path.exists(path_to_files):
-        print(f"{path_to_files} it's ok")
+        #print(f"{path_to_files} it's ok")
         abspath_to_files = os.path.abspath(path_to_files)
     else:
         raise FileNotFoundError(f'The {path_to_files} does not exist')
@@ -33,8 +34,7 @@ def TeXlabel(kpt):
     elif len(kpt) > 2:
         kpt = kpt[0] + '$_' + kpt[1] + '$'
     return kpt
-    
-    
+
 #from GPAW
 default_parameters: Dict[str, Any] = {
         'pat' : 'XGX1X',
@@ -46,14 +46,13 @@ default_parameters: Dict[str, Any] = {
         #              'do_not_symmetrize_the_density': None},  # deprecated
                      }  
     
-    
 class Bands:
-    def __init__(self,path_to_files,out_json=False,diroutput='json'):
+    def __init__(self,path_to_files,out_json=False,diroutput='json',show_files=True):
         self.abspath_to_files = check_files(path_to_files)
         self.bs               = None
         self.xcoords          = None
         self.ekn_array        = None
-        self.ch_file          = None
+        self.selected_file          = None
         self.fermi_level      = None
         self.dos              = None
         self.dos_array        = None
@@ -68,23 +67,24 @@ class Bands:
         self._calc_           = None
         self._calc_name_      = None
         self._fixed_calc      = None
-        print(f"Output files (json) will being saved on {diroutput} dir")
-        print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github')) #pyright: ignore
-
-
+        self.file             = None
+        
+        #print(f"Output files (json) will being saved on {diroutput} dir")
+        if show_files:
+            print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github')) #pyright: ignore
+        
     def _select_file(self,nofile:int):
-        self.ch_file     = self._df_files['gpw File'].iloc[nofile] 
-        self._calc_name_ = title(self._df_to_display["gpw File"].iloc[nofile])
-        self._out : Dict[str, Any] = {'file': self.ch_file,
-                                      'name': self._calc_name_}
-                                             
+        self.selected_file     = self._df_files['gpw File'].iloc[nofile] 
+        self.file        = self._df_to_display["gpw File"].iloc[nofile]
+        self._calc_name_ = title(self.file)
+        self._out : Dict[str, Any] = {'file': self.selected_file,
+                                      'name': self._calc_name_}                                  
         return self._out
         
         
-    def get_calc(self,nofile:int):
+    def get_calc(self,nofile:int)->tuple:
         file = self._select_file(nofile)
-        print(f"You chose {self._df_to_display['gpw File'].iloc[nofile]}")  
-        
+        # print(f"You chose {self._df_to_display['gpw File'].iloc[nofile]}")  
         from gpaw import GPAW   #type: ignore
         self._calc_  = GPAW(file['file'])
         return self._calc_ , file['file'], file['name'], nofile
@@ -104,29 +104,27 @@ class Bands:
         self.dos_array[0,:,1] = self.dos_up 
         self.dos_array[1,:,0] = e_down-ef
         self.dos_array[1,:,1] = -self.dos_down
-        dos_up_max = self.dos_up.max()
-        dos_down_max = self.dos_down.max()
-        results = namedtuple("results",["dos_array","dos_up_max","dos_down_max"])
+        dos_up_max            = self.dos_up.max()
+        dos_down_max          = self.dos_down.max()
+        results               = namedtuple("results",["dos_array","dos_up_max","dos_down_max"])
         return results(self.dos_array,dos_up_max,dos_down_max)
     
-        
-    def get_bands(self,calc,fixed=False,**kwargs):
+    def get_bands(self,nofile:int,fixed=False,**kwargs):
         """function to get band structure from specfic gpw file, this function returns an array"""
         
         # if nofile not in self.df_files['File'].iloc[nofile]:
         #     raise IndexError("Does not input number file")
         
-        # self.ch_file     = self._df_files['gpw File'].iloc[nofile] 
+        # self.selected_file     = self._df_files['gpw File'].iloc[nofile] 
         # self._calc_name_ = title(self._df_to_display["gpw File"].iloc[nofile])
         # print(f'You chose {self.files_to_dframe[nofile]}')   
         
-        self._calc_, self.ch_file, self._calc_name_ , nofile = calc
+        self._calc_, self.selected_file, self._calc_name_ , nofile = self.get_calc(nofile)
         if fixed:
             filename = 'fixed_'+self.files_to_dframe[nofile]
             _calc_bands = self.get_fixed(**kwargs)
         else:
             filename  = self.files_to_dframe[nofile]
-            print(filename)
             _calc_bands = self._calc_
             
         
@@ -134,9 +132,9 @@ class Bands:
         self.bs          = _calc_bands.band_structure()         #pyright: ignore
         self.fermi_level = _calc_bands.get_fermi_level()        #pyright: ignore
         no_of_spins      = _calc_bands.get_number_of_spins()    #pyright: ignore
-        energies         = self.bs.energies-self.fermi_level
         no_of_bands      = _calc_bands.get_number_of_bands()    #pyright: ignore
-                
+        energies         = self.bs.energies-self.fermi_level
+
                 
         #from gpaw documentation.
         self.xcoords, label_xcoords, x_labels = self.bs.get_labels()
@@ -169,7 +167,7 @@ class Bands:
             try:
                 calc2json(self.results,filename,dirsave=self.diroutput)
             except ValueError:
-                print(f"Can't created {self.ch_file}!")
+                print(f"Can't created {self.selected_file}!")
         else:
             print("All good!... I hope so :)")
         return self.results
@@ -197,13 +195,9 @@ class Bands:
         self.pdos_symbols  =([item for item, count in collections.Counter(self.symbols).items() if count > 1])
         lsymbs = len(self.pdos_symbols)
         
-    def get_fixed(self,**kwargs):
-        # for key in kwargs:
-        #     if key not in {'kpts','path'}:
-        #         raise TypeError(f'Cannot change {key!r} in ''fixed_density calculation!')
-    
+    def get_fixed(self,**kwargs):    
         try:
-            path = kwargs.pop('path','XGX1X')
+            path = kwargs.pop('path','XGX')
             npoints = kwargs.pop('npoints',100)
         except Exception as e:
             raise ValueError("There is an error in the path, verify if it is correct")      
@@ -211,40 +205,6 @@ class Bands:
         self.bp  = self._calc_.atoms.cell.bandpath(path=path,npoints=npoints)  #pyright: ignore
         self._fixed_calc = self._calc_.fixed_density(kpts=self.bp)             #pyright: ignore
         return self._fixed_calc
-        
-        
-        
-        
-        
-       
-       
-    
-        
-        
-        
-
-    
-
-        
-        
-        
-        
-        
-        
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
