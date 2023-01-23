@@ -3,9 +3,8 @@ using PGFPlotsX
 using JSON
 using PyCall
 using DataFrames
-include("export_plots.jl")
+include("build_plots.jl")
 include("parameters.jl")
-
 # function read_default_params(params::String)
 #     if isfile(actual_dir*"/"*params)
 #         params = JSON.parsefile(actual_dir*"/"*params)
@@ -16,7 +15,6 @@ include("parameters.jl")
 #         println("Doesn't exist plot_params.json!")
 #     end
 # end
-
 function update_parameters(params::Dict, key, value)
     if haskey(params, key)
         params[key] = value
@@ -25,6 +23,7 @@ function update_parameters(params::Dict, key, value)
     #     raise KeyError(error_mesage)
     end
 end
+
 
 function plot_params(params::Dict)
     for (key,value) in default_params
@@ -49,13 +48,11 @@ function plot_params(params::Dict)
     return params
 end
 
-
 function read_calcfile(dir_calc::String)
     file = read(dir_calc,String)
     data = JSON.parse(file)
     return data
 end
-
 
 function plots(dir_calc::String,params::Dict)
     data        = read_calcfile(dir_calc)
@@ -76,8 +73,6 @@ function plots(dir_calc::String,params::Dict)
         println("The number of final band to plots are excess of number of calculate bands!\n
                  Therefore the final band to plot is the number of total calculate bands:$(total_calc_bands)")
     end
-
-
     #fermi level coordinates
     xf =[parameters["xmin"],parameters["xmax"]]
     yf =[0,0] 
