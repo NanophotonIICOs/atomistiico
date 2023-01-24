@@ -20,9 +20,12 @@ def check_files(path_to_files):
         raise FileNotFoundError(f'The {path_to_files} does not exist')
     return abspath_to_files
 
-def title(name):
+def title(name,toplot=False):
     name = name.split(".gpw")[0].split("_")
-    title = r" ".join(name)+"\%" 
+    if toplot:
+        title = r"_".join(name)
+    else:
+        title = r" ".join(name)+"\\%" 
     return title
 
 def TeXlabel(kpt):
@@ -68,15 +71,16 @@ class Bands:
         self._calc_name_      = None
         self._fixed_calc      = None
         self.file             = None
+        self.name2plot        = None
         
         #print(f"Output files (json) will being saved on {diroutput} dir")
         if show_files:
             print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github')) #pyright: ignore
         
     def _select_file(self,nofile:int):
-        self.selected_file     = self._df_files['gpw File'].iloc[nofile] 
-        self.file        = self._df_to_display["gpw File"].iloc[nofile]
-        self._calc_name_ = title(self.file)
+        self.selected_file         = self._df_files['gpw File'].iloc[nofile] 
+        self.file                  = self._df_to_display["gpw File"].iloc[nofile]
+        self._calc_name_           = title(self.file)
         self._out : Dict[str, Any] = {'file': self.selected_file,
                                       'name': self._calc_name_}                                  
         return self._out
@@ -122,10 +126,12 @@ class Bands:
         self._calc_, self.selected_file, self._calc_name_ , nofile = self.get_calc(nofile)
         if fixed:
             filename = 'fixed_'+self.files_to_dframe[nofile]
-            _calc_bands = self.get_fixed(**kwargs)
+            _calc_bands    = self.get_fixed(**kwargs)
+            self.name2plot = title(filename,toplot=True)
         else:
             filename  = self.files_to_dframe[nofile]
             _calc_bands = self._calc_
+            self.name2plot = title(filename,toplot=True)
             
         
         # get bands parameters 
@@ -151,6 +157,7 @@ class Bands:
         self.dos_results = self._get_dos(_calc_bands,self.fermi_level,no_of_spins)
         
         self.results: Dict[str, Any] = {
+                                   'name2plot'    : self.name2plot,
                                    'name'         : self._calc_name_,
                                    'energies'     : self.ekn_array.tolist(),
                                    'xcoords'      : self.xcoords.tolist(),
@@ -197,7 +204,7 @@ class Bands:
         
     def get_fixed(self,**kwargs):    
         try:
-            path = kwargs.pop('path','XGX')
+            path = kwargs.pop('path','MGKM')
             npoints = kwargs.pop('npoints',100)
         except Exception as e:
             raise ValueError("There is an error in the path, verify if it is correct")      
