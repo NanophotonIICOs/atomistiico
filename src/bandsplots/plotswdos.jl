@@ -1,7 +1,8 @@
-include("bandsplots.jl")
+include("plots_utils.jl")
 include("parameters.jl")
+include("build_plots.jl")
 
-function plotwdos(dir_calc::String,params::Dict)
+function plotwdos(dir_calc::String,params::Dict,build::Bool=false)
     data        = read_calcfile(dir_calc)
     np          = pyimport("numpy")
     bands       = np.array(data["energies"])
@@ -25,7 +26,6 @@ function plotwdos(dir_calc::String,params::Dict)
         println("The number of final band to plots are excess of number of calculate bands!")
         println("Therefore the final band to plot is the number of total calculate bands:$(total_calc_bands)")
     end
-
     push!(PGFPlotsX.CUSTOM_PREAMBLE, raw"\usepgfplotslibrary{fillbetween}")
     plot = @pgf TikzPicture(
         Axis(
@@ -118,11 +118,17 @@ Axis(
     )
 )
 
+if build 
+    make_dir("build_plots")
+    
+    name2build = "plot-$(plot_title).pdf"
+    pgfsave("build-plots"*"/"*name2build,plot)
+    println("$(name2build) has been created!")
+end
 return plot
 end
 
-
-function plotwdosbubble(dir_calc::String,params::Dict)
+function plotwdosbubble(dir_calc::String,params::Dict,build::Bool=false)
     data        = read_calcfile(dir_calc)
     np          = pyimport("numpy")
     bands       = np.array(data["energies"])
@@ -204,9 +210,9 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                         "scatter",
                         "scatter src=y",
                         "only marks",
-                        "scatter/use mapped color={draw=red,fill=red,fill opacity=0.25}",
+                        "scatter/use mapped color={draw=red,fill=red,fill opacity=0.5}",
                         "mark options={line width=1pt}",
-                        raw"visualization depends on={1+(cos(deg(y))-sin(deg(y))) \as \perpointmarksize}",
+                        raw"visualization depends on={-(cos(deg(y))*sin(deg(y)))*2 \as \perpointmarksize}",
                         raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                         # raw"scatter/@pre marker code/.append style={/tikz/mark size=\pgfplotspointmetatransformed/1000}",
                         forget_plot
@@ -216,7 +222,7 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                     "only marks",
                     "scatter/use mapped color={draw=red,fill=red,fill opacity=0.15}",
                     "mark options={draw=red,fill=red,line width=1pt}",
-                    raw"visualization depends on={0.5+(cos(deg(y))-sin(deg(y))) \as \perpointmarksize}",
+                    raw"visualization depends on={-(cos(deg(y))*sin(deg(y)))*2 \as \perpointmarksize}",
                     raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                  },Table("x"=>bands[1,:,1],"y"=>bands[1,:,parameters["final_band"]])),
             LegendEntry(L"\color{red}{Spin $\uparrow$}"),
@@ -229,17 +235,17 @@ function plotwdosbubble(dir_calc::String,params::Dict)
                         "only marks",
                         "scatter/use mapped color={draw=blue,fill=blue,fill opacity=0.15}",
                         "mark options={line width=1pt}",
-                        raw"visualization depends on={1+(cos(deg(y))-sin(deg(y)))  \as \perpointmarksize}",
+                        raw"visualization depends on={-(cos(deg(y))*sin(deg(y)))*2  \as \perpointmarksize}",
                         raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                         forget_plot
                     },Table("x"=>bands[2,:,1],"y"=>bands[2,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],
             Plot({ "scatter",
                     "mark=*",
                     "only marks",
-                    "scatter src=x",
+                    "scatter src=y",
                     "scatter/use mapped color={draw=blue,fill=blue}",
                     "mark options={draw=blue,fill=blue,line width=1pt}",
-                    raw"visualization depends on={0.5+(cos(deg(y))-sin(deg(y))) \as \perpointmarksize}",
+                    raw"visualization depends on={-(cos(deg(y))*sin(deg(y)))*2 \as \perpointmarksize}",
                     raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                  },Table("x"=>bands[1,:,1],"y"=>bands[1,:,parameters["final_band"]])),
             LegendEntry(L"\color{blue}{Spin $\downarrow$}"),
@@ -280,5 +286,23 @@ Axis(
         Plot({ thick, color = "blue", fill = "blue", opacity = 0.25 },raw"fill between [of=down and axis]"),
     )
 )
+
+if build 
+    make_dir("build-plots")
+    name2plot = data["name2plot"]
+    name2build = "plot-$(name2plot).pdf"
+    pgfsave("build-plots"*"/"*name2build,plot)
+    println("$(name2build) has been created!")
+end
 return plot
 end
+
+
+
+
+
+
+
+
+
+
