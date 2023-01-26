@@ -67,8 +67,8 @@ class Bands:
         self.spin_up          = 0
         self.spin_down        = 1
         self.out_json         = out_json
-        self._calc_           = None
-        self._calc_name_      = None
+        self._calc           = None
+        self._calcname      = None
         self._fixed_calc      = None
         self.file             = None
         self.name2plot        = None
@@ -80,9 +80,9 @@ class Bands:
     def _select_file(self,nofile:int):
         self.selected_file         = self._df_files['gpw File'].iloc[nofile] 
         self.file                  = self._df_to_display["gpw File"].iloc[nofile]
-        self._calc_name_           = title(self.file)
+        self._calcname           = title(self.file)
         self._out : Dict[str, Any] = {'file': self.selected_file,
-                                      'name': self._calc_name_}                                  
+                                      'name': self._calcname}                                  
         return self._out
         
         
@@ -90,8 +90,9 @@ class Bands:
         file = self._select_file(nofile)
         # print(f"You chose {self._df_to_display['gpw File'].iloc[nofile]}")  
         from gpaw import GPAW   #type: ignore
-        self._calc_  = GPAW(file['file'])
-        return self._calc_ , file['file'], file['name'], nofile
+        self._calc  = GPAW(file['file'])
+        calc_results = namedtuple("calc_results",["gpaw","file","name","nofile"])
+        return calc_results(self._calc , file['file'], file['name'], nofile)
     
     def _get_dos(self,bands,ef,no_of_spins,**kwargs)->tuple:
         # export dos    
@@ -120,25 +121,29 @@ class Bands:
         #     raise IndexError("Does not input number file")
         
         # self.selected_file     = self._df_files['gpw File'].iloc[nofile] 
-        # self._calc_name_ = title(self._df_to_display["gpw File"].iloc[nofile])
+        # self._calcname = title(self._df_to_display["gpw File"].iloc[nofile])
         # print(f'You chose {self.files_to_dframe[nofile]}')   
+        calc               = self.get_calc(nofile)
+        self._calc         = calc.gpaw
+        self.selected_file = calc.file
+        self._calcname     = calc.name 
+        nofile             = calc.nofile     
         
-        self._calc_, self.selected_file, self._calc_name_ , nofile = self.get_calc(nofile)
         if fixed:
             filename = 'fixed_'+self.files_to_dframe[nofile]
-            _calc_bands    = self.get_fixed(**kwargs)
+            _calcbands    = self.get_fixed(**kwargs)
             self.name2plot = title(filename,toplot=True)
         else:
             filename  = self.files_to_dframe[nofile]
-            _calc_bands = self._calc_
+            _calcbands = self._calc
             self.name2plot = title(filename,toplot=True)
             
         
         # get bands parameters 
-        self.bs          = _calc_bands.band_structure()         #pyright: ignore
-        self.fermi_level = _calc_bands.get_fermi_level()        #pyright: ignore
-        no_of_spins      = _calc_bands.get_number_of_spins()    #pyright: ignore
-        no_of_bands      = _calc_bands.get_number_of_bands()    #pyright: ignore
+        self.bs          = _calcbands.band_structure()         #pyright: ignore
+        self.fermi_level = _calcbands.get_fermi_level()        #pyright: ignore
+        no_of_spins      = _calcbands.get_number_of_spins()    #pyright: ignore
+        no_of_bands      = _calcbands.get_number_of_bands()    #pyright: ignore
         energies         = self.bs.energies-self.fermi_level
 
                 
@@ -154,11 +159,11 @@ class Bands:
             for col,e_k in enumerate(e_kn.T[1:]):
                 self.ekn_array[spin,:,col+1] = e_k
         
-        self.dos_results = self._get_dos(_calc_bands,self.fermi_level,no_of_spins)
+        self.dos_results = self._get_dos(_calcbands,self.fermi_level,no_of_spins)
         
         self.results: Dict[str, Any] = {
                                    'name2plot'    : self.name2plot,
-                                   'name'         : self._calc_name_,
+                                   'name'         : self._calcname,
                                    'energies'     : self.ekn_array.tolist(),
                                    'xcoords'      : self.xcoords.tolist(),
                                    'label_xcoords': label_xcoords.tolist(),
@@ -209,48 +214,6 @@ class Bands:
         except Exception as e:
             raise ValueError("There is an error in the path, verify if it is correct")      
         
-        self.bp  = self._calc_.atoms.cell.bandpath(path=path,npoints=npoints)  #pyright: ignore
-        self._fixed_calc = self._calc_.fixed_density(kpts=self.bp)             #pyright: ignore
+        self.bp  = self._calc.atoms.cell.bandpath(path=path,npoints=npoints)  #pyright: ignore
+        self._fixed_calc = self._calc.fixed_density(kpts=self.bp)             #pyright: ignore
         return self._fixed_calc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
