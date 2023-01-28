@@ -23,9 +23,9 @@ def check_files(path_to_files):
 def title(name,toplot=False):
     name = name.split(".gpw")[0].split("_")
     if toplot:
-        title = r"_".join(name)
+        title = r" ".join(name)+r'$\epsilon$'
     else:
-        title = r" ".join(name)+"\\%" 
+        title = r"_".join(name) 
     return title
 
 def TeXlabel(kpt):
@@ -55,7 +55,7 @@ class Bands:
         self.bs               = None
         self.xcoords          = None
         self.ekn_array        = None
-        self.selected_file          = None
+        self.selected_file    = None
         self.fermi_level      = None
         self.dos              = None
         self.dos_array        = None
@@ -67,8 +67,8 @@ class Bands:
         self.spin_up          = 0
         self.spin_down        = 1
         self.out_json         = out_json
-        self._calc           = None
-        self._calcname      = None
+        self._calc            = None
+        self._calcname         = None
         self._fixed_calc      = None
         self.file             = None
         self.name2plot        = None
@@ -80,7 +80,7 @@ class Bands:
     def _select_file(self,nofile:int):
         self.selected_file         = self._df_files['gpw File'].iloc[nofile] 
         self.file                  = self._df_to_display["gpw File"].iloc[nofile]
-        self._calcname           = title(self.file)
+        self._calcname             = title(self.file)
         self._out : Dict[str, Any] = {'file': self.selected_file,
                                       'name': self._calcname}                                  
         return self._out
@@ -129,6 +129,7 @@ class Bands:
         self._calcname     = calc.name 
         nofile             = calc.nofile     
         
+        
         if fixed:
             filename = 'fixed_'+self.files_to_dframe[nofile]
             _calcbands    = self.get_fixed(**kwargs)
@@ -146,7 +147,6 @@ class Bands:
         no_of_bands      = _calcbands.get_number_of_bands()    #pyright: ignore
         energies         = self.bs.energies-self.fermi_level
 
-                
         #from gpaw documentation.
         self.xcoords, label_xcoords, x_labels = self.bs.get_labels()
         self.ekn_array = np.zeros(( no_of_spins,len(self.xcoords),no_of_bands))
@@ -207,7 +207,7 @@ class Bands:
         self.pdos_symbols  =([item for item, count in collections.Counter(self.symbols).items() if count > 1])
         lsymbs = len(self.pdos_symbols)
         
-    def get_fixed(self,**kwargs):    
+    def get_fixed(self,write=False,**kwargs):    
         try:
             path = kwargs.pop('path','MGKM')
             npoints = kwargs.pop('npoints',100)
@@ -216,4 +216,9 @@ class Bands:
         
         self.bp  = self._calc.atoms.cell.bandpath(path=path,npoints=npoints)  #pyright: ignore
         self._fixed_calc = self._calc.fixed_density(kpts=self.bp)             #pyright: ignore
+        if write:
+            self._fixed_calc.write(f"{self.diroutput}/{self._calcname}.gpw")
         return self._fixed_calc
+    
+    
+    
