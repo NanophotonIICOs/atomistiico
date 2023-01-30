@@ -63,12 +63,12 @@ class Bands:
         self.files            = sorted(glob.glob(self.abspath_to_files+'/*.gpw'))
         self._df_files        = pd.DataFrame(self.files,columns=['gpw File'])
         self.files_to_dframe  = [f.split('/')[-1] for f in self.files]
-        self._df_to_display    = pd.DataFrame(self.files_to_dframe,columns=['gpw File'])
+        self._df_to_display   = pd.DataFrame(self.files_to_dframe,columns=['gpw File'])
         self.spin_up          = 0
         self.spin_down        = 1
         self.out_json         = out_json
         self._calc            = None
-        self._calcname         = None
+        self._calcname        = None
         self._fixed_calc      = None
         self.file             = None
         self.name2plot        = None
@@ -101,7 +101,6 @@ class Bands:
             width = kwargs.pop('width',None)
         except Exception as e:
             raise ValueError("There is an error in the get_dos arguments from **kwargs, verify if it these are correct")      
-        
         e_up, self.dos_up     = bands.get_dos(spin=self.spin_up,npts=npts,width=width)      
         e_down, self.dos_down = bands.get_dos(spin=self.spin_down,npts=npts,width=width)  
         self.dos_array = np.zeros((no_of_spins,len(e_up),2))
@@ -219,6 +218,14 @@ class Bands:
         if write:
             self._fixed_calc.write(f"{self.diroutput}/{self._calcname}.gpw")
         return self._fixed_calc
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
