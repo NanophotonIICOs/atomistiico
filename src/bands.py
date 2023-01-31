@@ -63,12 +63,12 @@ class Bands:
         self.files            = sorted(glob.glob(self.abspath_to_files+'/*.gpw'))
         self._df_files        = pd.DataFrame(self.files,columns=['gpw File'])
         self.files_to_dframe  = [f.split('/')[-1] for f in self.files]
-        self._df_to_display    = pd.DataFrame(self.files_to_dframe,columns=['gpw File'])
+        self._df_to_display   = pd.DataFrame(self.files_to_dframe,columns=['gpw File'])
         self.spin_up          = 0
         self.spin_down        = 1
         self.out_json         = out_json
         self._calc            = None
-        self._calcname         = None
+        self._calcname        = None
         self._fixed_calc      = None
         self.file             = None
         self.name2plot        = None
@@ -101,7 +101,6 @@ class Bands:
             width = kwargs.pop('width',None)
         except Exception as e:
             raise ValueError("There is an error in the get_dos arguments from **kwargs, verify if it these are correct")      
-        
         e_up, self.dos_up     = bands.get_dos(spin=self.spin_up,npts=npts,width=width)      
         e_down, self.dos_down = bands.get_dos(spin=self.spin_down,npts=npts,width=width)  
         self.dos_array = np.zeros((no_of_spins,len(e_up),2))
@@ -114,7 +113,7 @@ class Bands:
         results               = namedtuple("results",["dos_array","dos_up_max","dos_down_max"])
         return results(self.dos_array,dos_up_max,dos_down_max)
     
-    def get_bands(self,nofile:int,fixed=False,**kwargs):
+    def get_bands(self,nofile:int,fixed=False,write=False,**kwargs):
         """function to get band structure from specfic gpw file, this function returns an array"""
         
         # if nofile not in self.df_files['File'].iloc[nofile]:
@@ -132,7 +131,7 @@ class Bands:
         
         if fixed:
             filename = 'fixed_'+self.files_to_dframe[nofile]
-            _calcbands    = self.get_fixed(**kwargs)
+            _calcbands    = self.get_fixed(write,**kwargs)
             self.name2plot = title(filename,toplot=True)
         else:
             filename  = self.files_to_dframe[nofile]
@@ -170,7 +169,8 @@ class Bands:
                                    'x_labels'     : x_labels,
                                    'energies_dim' : self.ekn_array.shape,
                                    'dos'          : self.dos_results.dos_array.tolist(),  #pyright: ignore
-                                   'dos_max'      : [self.dos_results.dos_up_max,self.dos_results.dos_down_max]  #pyright: ignore
+                                   'dos_max'      : [self.dos_results.dos_up_max,self.dos_results.dos_down_max],  #pyright: ignore
+                                   'no_of_bands'  : no_of_bands,
                                    }      
 
         #export output to json file
@@ -207,7 +207,7 @@ class Bands:
         self.pdos_symbols  =([item for item, count in collections.Counter(self.symbols).items() if count > 1])
         lsymbs = len(self.pdos_symbols)
         
-    def get_fixed(self,write=False,**kwargs):    
+    def get_fixed(self,write,**kwargs):    
         try:
             path = kwargs.pop('path','MGKM')
             npoints = kwargs.pop('npoints',100)
@@ -218,7 +218,16 @@ class Bands:
         self._fixed_calc = self._calc.fixed_density(kpts=self.bp)             #pyright: ignore
         if write:
             self._fixed_calc.write(f"{self.diroutput}/{self._calcname}.gpw")
+            print(f"wrtite--->{self.diroutput}/{self._calcname}.gpw")
         return self._fixed_calc
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
