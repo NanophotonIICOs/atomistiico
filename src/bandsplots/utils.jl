@@ -40,3 +40,15 @@ function plot_params(params::Dict)
 end
 
 
+function conditional_parameters(bands::Array,parameters::Dict)
+    if parameters["initial_band"] > size(bands,3)
+        update_parameters(parameters,"initial_band",2)
+        println("The number of initial band is greath than size of bands array") 
+    elseif parameters["final_band"] > size(bands,3)
+        total_calc_bands = size(bands,3)
+        update_parameters(parameters,"final_band",total_calc_bands)
+        println("The number of final band to plots are excess of number of calculate bands!\n
+                Therefore the final band to plot is the number of total calculate bands:$(total_calc_bands)")
+    end
+    return parameters
+end

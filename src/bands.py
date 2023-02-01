@@ -217,8 +217,8 @@ class Bands:
         self.bp  = self._calc.atoms.cell.bandpath(path=path,npoints=npoints)  #pyright: ignore
         self._fixed_calc = self._calc.fixed_density(kpts=self.bp)             #pyright: ignore
         if write:
-            self._fixed_calc.write(f"{self.diroutput}/{self._calcname}.gpw")
-            print(f"wrtite--->{self.diroutput}/{self._calcname}.gpw")
+            self._fixed_calc.write(f"{self.diroutput}/fixed_{self._calcname}.gpw")
+            print(f"wrtite--->{self.diroutput}/fixed_{self._calcname}.gpw")
         return self._fixed_calc
     
     

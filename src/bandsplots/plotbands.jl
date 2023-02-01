@@ -10,16 +10,7 @@ function plots(dir_calc,params::Dict)
     parameters = plot_params(params)
     update_parameters(parameters,"xmin",float(xtickcoords[1]))
     update_parameters(parameters,"xmax",float(xtickcoords[end]))
-
-    if parameters["initial_band"] > size(bands,3)
-        update_parameters(parameters,"initial_band",2)
-        println("The number of initial band is greath than size of bands array") 
-    elseif parameters["final_band"] > size(bands,3)
-        total_calc_bands = size(bands,3)
-        update_parameters(parameters,"final_band",total_calc_bands)
-        println("The number of final band to plots are excess of number of calculate bands!\n
-                 Therefore the final band to plot is the number of total calculate bands:$(total_calc_bands)")
-    end
+    conditional_parameters(bands,parameters)
     #fermi level coordinates
     xf =[parameters["xmin"],parameters["xmax"]]
     yf =[0,0] 
@@ -39,6 +30,7 @@ function plots(dir_calc,params::Dict)
         major_tick_length = "{$(parameters["ax_size_major_tick"])}",
         minor_tick_length = "{$(parameters["ax_size_minor_tick"])}",
         ylabel_style      = "{scale=$(parameters["ax_labels_scale"])}",
+        xlabel_style      = "{scale=$(patameters["ax_labels_scale"])",
         # "every tick label/.append style={scale=1.5}",
         "every axis plot/.style"="{
                 smooth,
@@ -52,6 +44,7 @@ function plots(dir_calc,params::Dict)
         xmajorgrids,
         "major x grid style={gray,thick}",
         ylabel = L"$E - E_{F}$ (eV)",
+        xlabel = "Wave Vector",
         #Legend style
         "every axis legend/.style" = "{
                                         cells={anchor=center},
