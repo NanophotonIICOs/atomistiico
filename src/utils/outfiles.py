@@ -13,6 +13,5 @@ def calc2json(results:Dict[str, Any],filename,dirsave="json"):
     json_data = json.dumps(results)
     with open(filename, "w") as f:
          f.write(json_data)
-    print(f"{filename} was created!")
-    
+        
     

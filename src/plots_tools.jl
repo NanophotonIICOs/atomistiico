@@ -1,6 +1,6 @@
 module plots_tools
-export bandsplots
-include("bandsplots/bandsplots.jl")
-include("bandsplots/export_plots.jl")
+include("bandsplots/plotbands.jl")
+include("bandsplots/plotwdos.jl")
+
 
 end
