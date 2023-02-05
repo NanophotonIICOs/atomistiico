@@ -3,32 +3,38 @@ include("build.jl")
 include("parameters.jl")
 
 
-function plotcontband(x::Array,y::Array,color::String="black",pstyle::String="line")
-    if isequal(pstyle,"bubble")
+function plotcontband(x::Array,y::Array,parameters::Dict,color::String="black")
+    mark_scale = parameters["ax_plot_mark_scale"]
+    mark_lw    = parameters["ax_plot_mark_lw"]
+    plot_style = parameters["plot_style"]
+    if isequal(plot_style,"bubble")
         plot = @pgf Plot({ 
             "scatter",
             "scatter src=y",
             "only marks",
             "scatter/use mapped color"="{draw=$(color),fill=$(color),fill opacity=0.5}",
-            "mark options={line width=1pt}",
+             mark_options ="{draw=$(color),fill=$(color),line width=$(mark_lw),scale=$(mark_scale)}",
             raw"visualization depends on={-(cos(deg(y))*sin(deg(y)))*5 \as \perpointmarksize}",
             raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
             # raw"scatter/@pre marker code/.append style={/tikz/mark size=\pgfplotspointmetatransformed/1000}",
             forget_plot
         },Table("x"=>x,"y"=>y))
         return plot
-    elseif isequal(pstyle,"line")
+    elseif isequal(plot_style,"line")
         plot = @pgf Plot({color="$color",no_marks,forget_plot},Table("x"=>x,"y"=>y))
         return plot
     end
 end
 
-function plotsingleband(x::Array,y::Array,label::String,color::String="blue")
+function plotsingleband(x::Array,y::Array,label::String,parameters,color::String="blue")
+    mark_scale = parameters["ax_plot_mark_scale"]
+    mark_lw    = parameters["ax_plot_mark_lw"]
+    label  = label
    plot=@pgf [Plot({ "scatter",
                     "scatter src=y",
                     "only marks",
                     "scatter/use mapped color"="{draw=$(color),fill=$(color),fill opacity=0.5}",
-                    "mark options"="{draw=$(color),fill=$(color),line width=1pt}",
+                    mark_options ="{draw=$(color),fill=$(color),line width=$(mark_lw),scale=$(mark_scale)}",
                     raw"visualization depends on={-(cos(deg(y))*sin(deg(y)))*3 \as \perpointmarksize}",
                     raw"scatter/@pre marker code/.append style={/tikz/mark size=\perpointmarksize},",
                     },Table("x"=>x,"y"=>y)),
@@ -40,22 +46,29 @@ function export_plot(plot,data,pstyle::String,diroutput::String="build-plots")
     make_dir(diroutput)
     name2plot = data["name"]
     name2build = "plot-$(name2plot)-$(pstyle).pdf"
-    pgfsave("build-plots"*"/"*name2build,plot)
+    pgfsave(diroutput*"/"*name2build,plot)
     println("$(name2build) has been created!")
     
 end
 
-function plotwdos(dir_calc::String,params::Dict,build::Bool=false)
+function plotwdos(dir_calc::String,params::Dict,build::Bool=false,diroutput::String="build-plots")
     data        = read_calcfile(dir_calc)
     np          = pyimport("numpy")
     bands       = np.array(data["energies"])
     dos         = np.array(data["dos"])
     xtickcoords = data["label_xcoords"]
-    plot_title  = data["name2plot"]
     parameters  = plot_params(params)
     plot_style = parameters["plot_style"]
     update_parameters(parameters,"xmin",float(xtickcoords[1]))
-    update_parameters(parameters,"xmax",float(xtickcoords[end]))
+    update_parameters(parameters,"xmax",float(xtickcoords[end])) 
+    
+
+    # verify if exist plot title
+    plot_title  = parameters["ax_plot_title"]
+    if plot_title != " "
+        plot_title=data["name2plot"]
+    end
+
     dos_up_max, dos_down_max = data["dos_max"]
     #fermi level coordinates
     xf = [parameters["xmin"],parameters["xmax"]]
@@ -82,8 +95,8 @@ function plotwdos(dir_calc::String,params::Dict,build::Bool=false)
             #-------------------------------------------------------------------------
             scale_only_axis   = parameters["scale_only_axis"],
             "axis background/.style={fill=none}",
-            line_width        = "{$(parameters["ax_lw"])}",
-            tick_style        = "{line width=$(parameters["ax_lw"]),black}",
+            line_width        = "{$(parameters["ax_axis_lw"])}",
+            tick_style        = "{line width=$(parameters["ax_axis_lw"]),black}",
             ticklabel_style   = "{scale=$(parameters["ax_tick_scale"])}",
             ytick_distance    = 1,
             major_tick_length = "{$(parameters["ax_size_major_tick"])}",
@@ -118,13 +131,13 @@ function plotwdos(dir_calc::String,params::Dict,build::Bool=false)
                                            }",
         },
          #spin Up
-        [plotcontband(bands[1,:,1],bands[1,:,i],"red",parameters["plot_style"]) for i in parameters["initial_band"]:parameters["final_band"]],
-        plotsingleband(bands[1,:,1],bands[1,:,end],"\\mathrm{Spin }\\uparrow","red"),
-        [plotcontband(bands[2,:,1],bands[2,:,i],"blue",parameters["plot_style"]) for i in parameters["initial_band"]:parameters["final_band"]],
-        plotsingleband(bands[1,:,1],bands[1,:,end],"\\mathrm{Spin }\\downarrow","blue"),
-        # Plot({red,no_marks},Table("x"=>bands[1,:,1],"y"=>bands[1,:,parameters["final_band"]])),
-        # LegendEntry(L"\color{red}{Spin $\uparrow$}"),
-        # #fermi level
+        [plotcontband(bands[1,:,1],bands[1,:,i],parameters,"red") for i in parameters["initial_band"]:parameters["final_band"]],
+        plotsingleband(bands[1,:,1],bands[1,:,end],"\\mathrm{Spin }\\uparrow",parameters,"red"),
+        [plotcontband(bands[2,:,1],bands[2,:,i],parameters,"blue") for i in parameters["initial_band"]:parameters["final_band"]],
+        plotsingleband(bands[1,:,1],bands[1,:,end],"\\mathrm{Spin }\\downarrow",parameters,"blue"),
+        # # Plot({red,no_marks},Table("x"=>bands[1,:,1],"y"=>bands[1,:,parameters["final_band"]])),
+        # # LegendEntry(L"\color{red}{Spin $\uparrow$}"),
+        # # #fermi level
         Plot({forget_plot, no_marks,dashed},Coordinates(xf,yf)),
         # #spin Down
         # [Plot({blue,no_marks,forget_plot},Table("x"=>bands[2,:,1],"y"=>bands[2,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],
@@ -138,13 +151,13 @@ Axis(
         height = parameters["height"],
         width  = parameters["ax_width_plotwdos"],
         "axis background/.style={fill=none}",
-        "axis line style" = "{line width=$(parameters["ax_lw"])}",
+        "axis line style" = "{line width=$(parameters["ax_axis_lw"])}",
         "clip mode = individual",
-        tick_style        = "{line width=$(parameters["ax_lw"]),black}",
+        tick_style        = "{line width=$(parameters["ax_axis_lw"]),black}",
         ticklabel_style   = "{scale=$(parameters["ax_tick_scale"])}",
         major_tick_length = "{$(parameters["ax_size_major_tick"])}",
         minor_tick_length = "{$(parameters["ax_size_minor_tick"])}",
-        ylabel_style      = "{scale=$(parameters["ax_labels_scale"]),rotate=180}",
+        #ylabel_style      = "{scale=$(parameters["ax_labels_scale"]),rotate=180}",
         xlabel_style      = "{scale=$(parameters["ax_labels_scale"])}",
         # "every tick label/.append style={scale=1.5}",
         "every axis plot/.style"="{
@@ -152,12 +165,14 @@ Axis(
                 mark options={scale=$(parameters["ax_plot_mark_scale"])},
                 line width=$(parameters["ax_plot_line_width"])}",
         "xtick pos = right",
-        "ytick pos = right",
-        ymin=parameters["emin"],ymax=parameters["emax"],
-        xmin=-dos_down_max,xmax=dos_up_max,
+        #"ytick pos = right",
+        yticklabels = "{}",
+        ymajorticks = "false",
+        ymin   = parameters["emin"],ymax=parameters["emax"],
+        xmin   = -dos_down_max,xmax=dos_up_max,
         # "axis line style = {line width=2pt}",
         # "clip mode = individual",
-         ylabel = L"$E - E_{F}$ (eV)",
+        # ylabel = L"$E - E_{F}$ (eV)",
         "xlabel = DOS",
     },
         [Plot({red,no_marks,"name path=up"},Table("x"=>dos[1,:,2],"y"=>dos[1,:,1]))],
@@ -169,7 +184,7 @@ Axis(
 )
 
 if build 
-    export_plot(plot,data,plot_style)
+    export_plot(plot,data,plot_style,diroutput)
 end
 return plot
 end
