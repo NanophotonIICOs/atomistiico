@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os 
 import glob as glob
-from IPython.display import HTML
 from utils import make_dir
 import collections
 from typing import Any, Dict
@@ -123,10 +122,10 @@ class Bands:
         # self._calcname = title(self._df_to_display["gpw File"].iloc[nofile])
         # print(f'You chose {self.files_to_dframe[nofile]}')   
         calc               = self.get_calc(nofile)
-        self._calc         = calc.gpaw
-        self.selected_file = calc.file
-        self._calcname     = calc.name 
-        nofile             = calc.nofile     
+        self._calc         = calc.gpaw        #pyright: ignore
+        self.selected_file = calc.file        #pyright: ignore
+        self._calcname     = calc.name        #pyright: ignore
+        nofile             = calc.nofile      #pyright: ignore
         
         
         if fixed:
