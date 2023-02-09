@@ -1,11 +1,11 @@
 using JSON
 using PGFPlotsX
 using PyCall
+
 include("parameters.jl")
 
 function read_calcfile(dir::String)
-    json_data = JSON.parsefile(dir)
-    return json_data
+    return JSON.parsefile(dir)
 end
 
 function update_parameters(params::Dict, key, value)
