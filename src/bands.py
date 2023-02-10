@@ -10,7 +10,6 @@ from gpaw import GPAW
 from tabulate import tabulate 
 from collections import namedtuple
 
-
 def check_files(path_to_files):
     if os.path.exists(path_to_files):
         #print(f"{path_to_files} it's ok")
