@@ -4,11 +4,11 @@ from matplotlib import pyplot as plt
 from glob import glob
 import os
 
-path = "/media/rbnfiles/dft/pts2/"
+path = ""
 
 class data:
     def __init__(self):
-        self.path  = "/media/rbnfiles/dft/pts2/"
+        self.path  = ""
         self.folders = []
         self.files = []
         self.complete_folders= []
