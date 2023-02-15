@@ -25,6 +25,9 @@ def show_structure(file):
     return view.show()
 
 
+
+
+
 import os
 import sentry_sdk
 import streamlit as st
@@ -60,7 +63,5 @@ def main():
 
 
 if __name__ == '__main__':
-
-
     main()
 
