@@ -24,10 +24,6 @@ def show_structure(file):
     
     return view.show()
 
-
-
-
-
 import os
 import sentry_sdk
 import streamlit as st
