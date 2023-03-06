@@ -61,3 +61,5 @@ def main():
 if __name__ == '__main__':
     main()
 
+#SEILYFXLN8Z8BWO0
+# python setup.py sdist
