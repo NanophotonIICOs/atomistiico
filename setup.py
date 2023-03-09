@@ -2,13 +2,11 @@ from setuptools import setup, find_packages
 
 setup(
     name='atomistiico',
-    version='1.0',
+    version='0.1',
     description='Repository to analyzing atomistic simulations from DFTs and many-body quantum models',
-    author=[
-            ('O. Ruiz-Cigarrillo', 'ruizoscar.1393@gmail.com'),
-            ('A.M Martinez-Martinez', '')
-    ],
-    url='https://github.com/NanophotonIICOs/atomistic-analysis',
+    author='O. Ruiz-Cigarrillo, A.M. Martinez-Martinez',
+    author_email='ruizoscar.1393@gmail.com, a276775@alumnos.uaslp.mx',
+    url='https://github.com/NanophotonIICOs/atomistiico',
     packages=find_packages('atomistiico'),
     package_dir={'': 'atomistiico'},
     install_requires=[
@@ -18,6 +16,12 @@ setup(
         'tqdm',
         'numba',
         'scipy',
+        'pylibxc2',
+        'Flask',
+        'pytest',
+        'spglib',
+        'ase',
+        'gpaw',
         'Ipython',
         'tabulate',
         'pandas',
@@ -27,8 +31,6 @@ setup(
         'lumispy',
         'specutils',
         'peakutils',
-        'ase',
-        'gpaw',
         'py3dmol',
         'py4dstem',
         'ipympl',
