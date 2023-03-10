@@ -3,12 +3,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 from glob import glob
 import os
-
-path = ""
+import pandas as pd
 
 class data:
-    def __init__(self):
-        self.path  = ""
+    def __init__(self,path):
+        self.path  = path
         self.folders = []
         self.files = []
         self.complete_folders= []
@@ -20,7 +19,6 @@ class data:
             for filesinto in glob(folder+'/*.traj'):
                 self.complete_files.append(filesinto)
 
-   
     def get_list_samples(self,folder):
         npath = self.path+'/'+folder
         self.folder_samples=[]
@@ -32,6 +30,17 @@ class data:
                         self.folder_samples.append(filesinto)
 
         return self.folder_samples
+    
+    def get_fdata(self):
+        folders = []
+        for i in os.listdir(self.path):
+            if not '.' in i:
+                 cpath = f"{self.path}/{i}"
+                 folders.append(cpath)
+        fdf = pd.DataFrame(folders,columns=["Directory"])
+        return folders
+        
+        
 
 
     def return_data(self,file):
