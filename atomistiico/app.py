@@ -27,8 +27,7 @@ def show_structure(file):
 import os
 import sentry_sdk
 import streamlit as st
-from utils import (authors, main_page, real_time_experiment, sidebar,
-                        visualisation)
+from utils import (authors, main_page, sidebar, visualisation)
 
 # from https://github.com/czubert/SERSitiVIS
 
