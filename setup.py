@@ -37,6 +37,7 @@ setup(
         'abtem',
         'plotly==5.13.1',
         'streamlit',
-        'dash'
+        'dash',
+        'sentry-sdk'
     ],
 )
