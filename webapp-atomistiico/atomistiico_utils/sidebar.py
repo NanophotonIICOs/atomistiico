@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import utils
+from atomistiico_utils import utils
 # from constants import LABELS
 import os
 from PIL import Image
@@ -49,4 +49,13 @@ def choose_sample(laboratory):
     return s_samples
 
 
+
+def charge_path():
+    uploaded_file = st.file_uploader("Select file",type=".json", accept_multiple_files=False,)
+    # if uploaded_file is not None:
+    #     file_details = {"FileName": uploaded_file.name, "FileType": uploaded_file.type}
+    #     st.write(file_details)
+    #     file_path = uploaded_file.name
+    #     st.write(file_path)
+    #return file_path
 

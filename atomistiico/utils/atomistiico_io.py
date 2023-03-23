@@ -1,7 +1,15 @@
 import json
 import os 
-from utils import make_dir
 from typing import Any, Dict
+
+def make_dir(folder):
+    if os.path.exists(folder):
+        #print(f"{folder} dir already exist!")
+        pass
+    else:
+        print(f"{folder} dir it's created!")
+        os.mkdir(folder)
+
 
 def calc2json(results:Dict[str, Any],filename,dirsave="json"): 
     make_dir(dirsave)

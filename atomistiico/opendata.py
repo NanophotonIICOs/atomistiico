@@ -6,6 +6,7 @@ import os
 import pandas as pd
 
 class data:
+    
     def __init__(self,path):
         self.path  = path
         self.folders = []

@@ -7,8 +7,8 @@ setup(
     author='O. Ruiz-Cigarrillo, A.M. Martinez-Martinez',
     author_email='ruizoscar.1393@gmail.com, a276775@alumnos.uaslp.mx',
     url='https://github.com/NanophotonIICOs/atomistiico',
-    packages=find_packages('atomistiico'),
-    package_dir={'': 'atomistiico'},
+    packages=find_packages(''),
+    package_dir={'': '.'},
     install_requires=[
         'numpy',
         'scipy',
@@ -38,6 +38,14 @@ setup(
         'plotly==5.13.1',
         'streamlit',
         'dash',
-        'sentry-sdk'
+        'sentry-sdk',
+        'crystal-toolkit',
+        'dash-mp-components',
+        'Flask-Caching',
+        'robocrys',
+        'dash_daq',
+        'phonopy',
+        'dscribe',
+        'dash-bio'
     ],
 )

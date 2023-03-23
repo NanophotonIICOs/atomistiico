@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os 
 import glob as glob
-from utils import make_dir
+from .utils.atomistiico_io import make_dir
 import collections
 from typing import Any, Dict
 from gpaw import GPAW   
@@ -47,7 +47,8 @@ default_parameters: Dict[str, Any] = {
         #              'do_not_symmetrize_the_density': None},  # deprecated
                      }  
     
-    
+
+# def add_xyz()
     
 class Bands:
     def __init__(self,path_to_files,out_json=False,diroutput='json',show_files=True):
@@ -72,6 +73,7 @@ class Bands:
         self._fixed_calc      = None
         self.file             = None
         self.name2plot        = None
+        self.xyz              = None
         
         #print(f"Output files (json) will being saved on {diroutput} dir")
         if show_files:
@@ -85,6 +87,12 @@ class Bands:
                                       'name': self._calcname}                                  
         return self._out
         
+    
+    def write_xyz(self,atoms):
+        xyz_string = f"{len(atoms)}\n\n"
+        for atom in atoms:
+            xyz_string += f"{atom.symbol} {atom.position[0]} {atom.position[1]} {atom.position[2]}\n"
+        return xyz_string
         
     def get_calc(self,nofile:int)->tuple:
         file = self._select_file(nofile)
@@ -159,6 +167,7 @@ class Bands:
                 self.ekn_array[spin,:,col+1] = e_k
         
         self.dos_results = self._get_dos(_calcbands,self.fermi_level,no_of_spins)
+        self.xyz = self.write_xyz(self._calc.atoms)
         
         self.results: Dict[str, Any] = {
                                    'name2plot'    : self.name2plot,
@@ -171,10 +180,11 @@ class Bands:
                                    'dos'          : self.dos_results.dos_array.tolist(),  #pyright: ignore
                                    'dos_max'      : [self.dos_results.dos_up_max,self.dos_results.dos_down_max],  #pyright: ignore
                                    'no_of_bands'  : no_of_bands,
+                                   'xyz':self.xyz,
                                    }      
 
         #export output to json file
-        from utils.outfiles import calc2json
+        from .utils.atomistiico_io import calc2json
         if self.out_json == True:
             try:
                 calc2json(self.results,filename,dirsave=self.diroutput)
