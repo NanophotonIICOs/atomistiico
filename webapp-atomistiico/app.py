@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import glob
 import py3Dmol
 
-
 files = []
 for i,file in enumerate(sorted(glob.glob("*.xyz"))):
     print(f"{i} ---> {file}")
@@ -28,7 +27,7 @@ def show_structure(file):
 import os
 import sentry_sdk
 import streamlit as st
-from utils import (authors, main_page, sidebar, visualisation)
+from atomistiico_utils import (authors, main_page, sidebar, visualisation)
 
 # from https://github.com/czubert/SERSitiVIS
 
