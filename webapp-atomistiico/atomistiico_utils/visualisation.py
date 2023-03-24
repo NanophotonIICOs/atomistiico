@@ -17,15 +17,12 @@ def show_structure(structure,molformat='xyz',style='stick',background='none'):
         xyzview.setStyle({'sphere':{'colorscheme':'Jmol','scale':0.3},
                     'stick':{'colorscheme':'Jmol', 'radius':0.15}})
         
-        
         ase_atoms = atoms_from_xyz_string(structure)
         for i, atom in enumerate(ase_atoms):
              xyzview.addLabel(atom.symbol, {'position': {'x': atom.position[0], 'y': atom.position[1], 'z': atom.position[2]}, 'backgroundColor': 'none', 'backgroundOpacity': 0., 'fontColor': 'black', 'fontSize': 17})
         xyzview.setBackgroundColor(background)
         xyzview.zoomTo()
         return xyzview
-
-
 
 def get_path():
     import os

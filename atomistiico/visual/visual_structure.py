@@ -23,7 +23,6 @@ class Show:
     def __init__(self,path) -> py3Dmol:
         self.data = pjson(path)
         self.structure = self.data['xyz']
-        self.atoms = None
     
     def show_structure(self,widt=500,height=500):
         self.atoms = py3Dmol.view(width=widt,height=height)
