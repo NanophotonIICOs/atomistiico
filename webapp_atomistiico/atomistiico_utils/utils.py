@@ -203,6 +203,18 @@ def print_widget_labels(widget_title, margin_top=5, margin_bottom=10):
         unsafe_allow_html=True)
 
     
+def get_structure_properties():
+    print_widget_labels('Background')
+    background_window = st.checkbox('None')
+    
+    if not background_window:
+        b_window='white'
+    else:
+        b_window='none'
+        
+    return b_window
+
+
 def error_alert():
     st.warning("Error in file",icon="⚠️")
     

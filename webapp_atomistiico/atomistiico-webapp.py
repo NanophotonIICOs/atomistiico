@@ -4,33 +4,14 @@ import matplotlib.pyplot as plt
 import glob
 import py3Dmol
 
-
-files = []
-for i,file in enumerate(sorted(glob.glob("*.xyz"))):
-    print(f"{i} ---> {file}")
-    files.append(file)
-
-def show_structure(file):
-    pts = open(file).read()
-    view = py3Dmol.view(width=800,height=500)
-    view.addModel(pts,'xyz',{'doAssembly':True,
-                                 'duplicateAssemblyAtoms':True,
-                                 'normalizeAssembly':True})
-    view.setStyle({'sphere':{'colorscheme':'Jmol','scale':0.25},
-                    'stick':{'colorscheme':'Jmol', 'radius':0.15}})
-    view.addUnitCell()
-    view.zoomTo()
-    view.zoom(1.75,1.75)
-    view.addSurface(py3Dmol.VDW,{'opacity':1,'colorscheme':{'prop':'b','gradient':'sinebow','min':0,'max':70}})
-    
-    return view.show()
-
 import os
 import sentry_sdk
 import streamlit as st
 from atomistiico_utils import (authors, main_page, sidebar, visualisation)
 
 # from https://github.com/czubert/SERSitiVIS
+# Inicializar el AutoReloader con la clase que quieres actualizar automáticamente
+
 
 if os.path.isfile(".streamlit/secrets.toml"):
     if 'sentry_url' in st.secrets:
