@@ -6,9 +6,9 @@ def get_json(file):
         data = json.load(file)
     return data
 
-class pjson:
-    def __init__(self,path) -> None:
-        self.data=get_json(path)
+class out_json:
+    def __init__(self,path) -> dict:
+        self.data     = get_json(path)
         self.energies = None
         self.xcoords  = None
         self.xlabels  = None

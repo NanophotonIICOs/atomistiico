@@ -48,8 +48,6 @@ default_parameters: Dict[str, Any] = {
                      }  
     
 
-# def add_xyz()
-    
 class Bands:
     def __init__(self,path_to_files,out_json=False,diroutput='json',show_files=True):
         self.abspath_to_files = check_files(path_to_files)

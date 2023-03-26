@@ -72,5 +72,5 @@ def show_developers():
     contact_developers()
     
     made_by()
-    made_by_puppy()
+    #made_by_puppy()
     # made_by_lukasz()
