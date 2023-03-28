@@ -27,25 +27,15 @@ setup(
         'pandas',
         'h5py',
         'ipykernel',
-        'astropy',
-        'lumispy',
         'specutils',
         'peakutils',
         'py3dmol',
-        'py4dstem',
         'ipympl',
-        'abtem',
         'plotly==5.13.1',
         'streamlit',
-        'dash',
-        'sentry-sdk',
-        'crystal-toolkit',
-        'dash-mp-components',
-        'Flask-Caching',
-        'robocrys',
-        'dash_daq',
-        'phonopy',
-        'dscribe',
-        'dash-bio'
+        'pyiron',
+        'pip install pymongo'
     ],
 )
+
+
