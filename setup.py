@@ -34,7 +34,7 @@ setup(
         'plotly==5.13.1',
         'streamlit',
         'pyiron',
-        'pip install pymongo'
+        'pymongo'
     ],
 )
 
