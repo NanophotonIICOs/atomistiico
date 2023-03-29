@@ -1,4 +1,4 @@
-name: atomistiicjupy
+name: atomistiico
 channels:
   - conda-forge
 dependencies:
