@@ -19,7 +19,6 @@ def atoms_from_xyz_string(xyz_string):
         atoms = ase.io.read(f, format='xyz')
     return atoms
 
-
 class Show:
     def __init__(self,path):
         self.data = out_json(path)
@@ -39,6 +38,4 @@ class Show:
         self.viewer.setBackgroundColor(background)
         self.viewer.zoomTo()
         self.viewer.render()
-
-
         return self.viewer
