@@ -131,4 +131,5 @@ dmypy.json
 notebooks/json
 notebooks/julia-plots.ipynb
 notebooks/*
+aislinn-thesis/*
 
