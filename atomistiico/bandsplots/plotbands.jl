@@ -30,7 +30,7 @@ function plots(dir_calc,params::Dict)
         major_tick_length = "{$(parameters["ax_size_major_tick"])}",
         minor_tick_length = "{$(parameters["ax_size_minor_tick"])}",
         ylabel_style      = "{scale=$(parameters["ax_labels_scale"])}",
-        xlabel_style      = "{scale=$(patameters["ax_labels_scale"])",
+        xlabel_style      = "{scale=$(parameters["ax_labels_scale"])",
         # "every tick label/.append style={scale=1.5}",
         "every axis plot/.style"="{
                 smooth,
