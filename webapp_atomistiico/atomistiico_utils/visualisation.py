@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from atomistiico_utils import  sidebar,utils
-import os
+import oscode
 import streamlit.components.v1 as components
 from atomistiico_visual.visual_structure import Show
 # import utils as utils
