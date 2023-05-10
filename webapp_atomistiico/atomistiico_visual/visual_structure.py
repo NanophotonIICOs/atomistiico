@@ -39,3 +39,4 @@ class Show:
         self.viewer.zoomTo()
         self.viewer.render()
         return self.viewer
+    
