@@ -85,9 +85,6 @@ class Bands:
                                       'name': self._calcname}                                  
         return self._out
         
-        
-        
-    
     def write_xyz(self,atoms):
         xyz_string = f"{len(atoms)}\n\n"
         for atom in atoms:
