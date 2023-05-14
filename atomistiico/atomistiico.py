@@ -93,6 +93,9 @@ class Bands:
             xyz_string += f"{atom.symbol} {atom.position[0]} {atom.position[1]} {atom.position[2]}\n"
         return xyz_string
         
+        
+        
+        
     def get_calc(self,nofile:int)->tuple:
         file = self._select_file(nofile)
         # print(f"You chose {self._df_to_display['gpw File'].iloc[nofile]}")  
