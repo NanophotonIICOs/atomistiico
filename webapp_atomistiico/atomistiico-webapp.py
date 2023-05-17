@@ -5,7 +5,7 @@ import glob
 import py3Dmol
 
 import os
-import sentry_sdk
+# import sentry_sdk
 import streamlit as st
 from atomistiico_utils import (authors, main_page, sidebar, visualisation)
 
