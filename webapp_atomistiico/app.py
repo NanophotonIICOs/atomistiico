@@ -25,23 +25,22 @@ def show_structure(file):
     return view.show()
 
 import os
-import sentry_sdk
 import streamlit as st
 from atomistiico_utils import (authors, main_page, sidebar, visualisation)
 
 # from https://github.com/czubert/SERSitiVIS
 
-if os.path.isfile(".streamlit/secrets.toml"):
-    if 'sentry_url' in st.secrets:
-        sentry_sdk.init(
-            st.secrets['sentry_url'],
+# if os.path.isfile(".streamlit/secrets.toml"):
+#     if 'sentry_url' in st.secrets:
+#         sentry_sdk.init(
+#             st.secrets['sentry_url'],
     
-            traces_sample_rate=0.001,
-        )
-    else:
-        print('sentry not running')
-else:
-    print('Ok!')
+#             traces_sample_rate=0.001,
+#         )
+#     else:
+#         print('sentry not running')
+# else:
+#     print('Ok!')
 
 
 def main():
