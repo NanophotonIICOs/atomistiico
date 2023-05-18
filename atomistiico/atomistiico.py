@@ -73,6 +73,8 @@ class Bands:
         self.name2plot        = None
         self.xyz              = None
         
+        
+        
         #print(f"Output files (json) will being saved on {diroutput} dir")
         if show_files:
             print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github')) #pyright: ignore
