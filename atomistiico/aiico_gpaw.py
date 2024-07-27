@@ -77,7 +77,7 @@ class Bands:
         
         #print(f"Output files (json) will being saved on {diroutput} dir")
         if show_files:
-            print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github')) #pyright: ignore
+            print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github'))
         
     def _select_file(self,nofile:int):
         self.selected_file         = self._df_files['gpw File'].iloc[nofile] 
@@ -130,10 +130,10 @@ class Bands:
         # self._calcname = title(self._df_to_display["gpw File"].iloc[nofile])
         # print(f'You chose {self.files_to_dframe[nofile]}')   
         calc               = self.get_calc(nofile)
-        self._calc         = calc.gpaw        #pyright: ignore
-        self.selected_file = calc.file        #pyright: ignore
-        self._calcname     = calc.name        #pyright: ignore
-        nofile             = calc.nofile      #pyright: ignore
+        self._calc         = calc.gpaw       
+        self.selected_file = calc.file       
+        self._calcname     = calc.name       
+        nofile             = calc.nofile     
         
         
         if fixed:
@@ -147,10 +147,10 @@ class Bands:
             
         
         # get bands parameters 
-        self.bs          = _calcbands.band_structure()         #pyright: ignore
-        self.fermi_level = _calcbands.get_fermi_level()        #pyright: ignore
-        no_of_spins      = _calcbands.get_number_of_spins()    #pyright: ignore
-        no_of_bands      = _calcbands.get_number_of_bands()    #pyright: ignore
+        self.bs          = _calcbands.band_structure()        
+        self.fermi_level = _calcbands.get_fermi_level()       
+        no_of_spins      = _calcbands.get_number_of_spins()   
+        no_of_bands      = _calcbands.get_number_of_bands()   
         energies         = self.bs.energies-self.fermi_level
 
         #from gpaw documentation.
@@ -176,8 +176,8 @@ class Bands:
                                    'label_xcoords': label_xcoords.tolist(),
                                    'x_labels'     : x_labels,
                                    'energies_dim' : self.ekn_array.shape,
-                                   'dos'          : self.dos_results.dos_array.tolist(),  #pyright: ignore
-                                   'dos_max'      : [self.dos_results.dos_up_max,self.dos_results.dos_down_max],  #pyright: ignore
+                                   'dos'          : self.dos_results.dos_array.tolist(), 
+                                   'dos_max'      : [self.dos_results.dos_up_max,self.dos_results.dos_down_max], 
                                    'no_of_bands'  : no_of_bands,
                                    'xyz':self.xyz,
                                    }      
@@ -200,13 +200,12 @@ class Bands:
         # therefore if to_print=False returns datframe with gpw files with the real path to being found
         return self._df_files
     
-    @property
     def show_files(self):
         # Return dataframe with gpw files in terminal
         # if to_print=True returns dataframe to display, this means that shows only name of gpw files in path
         # therefore if to_print=False returns datframe with gpw files with the real path to being found
         from tabulate import tabulate
-        print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github')) #pyright: ignore
+        print(tabulate(self._df_to_display, headers = 'keys', tablefmt = 'github'))
 
     def get_pdos(self,calc,**kwargs):
         self.calc = calc
@@ -223,13 +222,12 @@ class Bands:
         except Exception as e:
             raise ValueError("There is an error in the path, verify if it is correct")      
         
-        self.bp  = self._calc.atoms.cell.bandpath(path=path,npoints=npoints)  #pyright: ignore
-        self._fixed_calc = self._calc.fixed_density(kpts=self.bp)             #pyright: ignore
+        self.bp  = self._calc.atoms.cell.bandpath(path=path,npoints=npoints) 
+        self._fixed_calc = self._calc.fixed_density(kpts=self.bp)            
         if write:
             self._fixed_calc.write(f"{self.diroutput}/fixed_{self._calcname}.gpw")
             print(f"wrtite--->{self.diroutput}/fixed_{self._calcname}.gpw")
         return self._fixed_calc
-    
     
     
     
