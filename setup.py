@@ -7,8 +7,8 @@ setup(
     author='O. Ruiz-Cigarrillo, A.M. Martinez-Martinez, G.A. Martinez-Zepeda, R. Balderas-Navarro',
     author_email='ruizoscar.1393@gmail.com, a276775@alumnos.uaslp.mx',
     url='https://github.com/NanophotonIICOs/atomistiico',
-    packages=find_packages(''),
-    package_dir={'': '.'},
+    packages=find_packages(),
+    #package_dir={'': '.'},
     install_requires=[
         'numpy',
         'scipy',

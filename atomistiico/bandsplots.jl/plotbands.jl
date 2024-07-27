@@ -1,0 +1,76 @@
+include("build.jl")
+include("utils.jl")
+
+function plots(dir_calc,params::Dict)
+    data        = read_calcfile(dir_calc)
+    np          = pyimport("numpy")
+    bands       = np.array(data["energies"])
+    xtickcoords = data["label_xcoords"]
+    plot_title  = data["name"]
+    parameters = plot_params(params)
+    update_parameters(parameters,"xmin",float(xtickcoords[1]))
+    update_parameters(parameters,"xmax",float(xtickcoords[end]))
+    conditional_parameters(bands,parameters)
+    #fermi level coordinates
+    xf =[parameters["xmin"],parameters["xmax"]]
+    yf =[0,0] 
+    plot = @pgf TikzPicture(
+    Axis(
+        { 
+            "name=plot1",
+            height = parameters["height"],
+            width  = parameters["width"],
+            #title  = parameters[],
+            #title_style ="{scale=$(parameters["ax_labels_scale"]),at={(axis description cs:0.5,1.05)}}",
+            # #-------------------------------------------------------------------------
+            scale_only_axis   = parameters["scale_only_axis"],
+            "axis background/.style={fill=none}",
+            line_width        = "{$(parameters["ax_axis_lw"])}",
+            tick_style        = "{line width=$(parameters["ax_axis_lw"]),black}",
+            ticklabel_style   = "{scale=$(parameters["ax_tick_scale"])}",
+            ytick_distance    = 1,
+            major_tick_length = "{$(parameters["ax_size_major_tick"])}",
+            minor_tick_length = "{$(parameters["ax_size_minor_tick"])}",
+            ylabel_style      = "{scale=$(parameters["ax_labels_scale"])}",
+            xlabel_style      = "{scale=$(parameters["ax_labels_scale"])}",
+            "ytick pos = left",
+            "every tick label/.append style={scale=0.95}",
+            "every axis plot/.style"="{
+                    smooth,
+                    mark options={scale=$(parameters["ax_plot_mark_scale"])},
+                    line width=$(parameters["ax_plot_line_width"])}",
+            # # -------------------------------------------------------------------------
+            xmin=parameters["xmin"],xmax=parameters["xmax"],
+            ymin=parameters["emin"],ymax=parameters["emax"],
+            xtick = xtickcoords,
+            xticklabels =data["x_labels"],
+            xmajorgrids,
+            "major x grid style={gray,thick}",
+            ylabel = L"$E - E_{F}$ (eV)",
+            xlabel = "Wave Vector",
+            #Legend style
+            "every axis legend/.style" = "{
+                                            cells={anchor=center},
+                                            inner xsep=1pt,
+                                            inner ysep=1pt,
+                                            nodes={scale=$(parameters["ax_labels_scale"]),inner sep=2pt, transform shape},
+                                            draw=none,
+                                            fill=white,
+                                            at={$(parameters["ax_legend_position"])},
+                                            anchor=south east,
+                                           }",
+        },
+    #spin Up
+    [Plot({red,no_marks,forget_plot},Table("x"=>bands[1,:,1],"y"=>bands[1,:,k])) for k=parameters["initial_band"]:parameters["final_band"]],
+    Plot({red,no_marks},Table("x"=>bands[1,:,1],"y"=>bands[1,:,parameters["final_band"]])),
+    LegendEntry(L"\color{red}{Spin $\uparrow$}"),
+    # fermi_level
+    Plot({forget_plot, no_marks,dashed},Coordinates(xf,yf)),
+    #spin down
+    [Plot({blue,no_marks,forget_plot},Table("x"=>bands[2,:,1],"y"=>bands[2,:,k])) for k=parameters["initial_band"]:parameters["final_band"]-1],
+    Plot({blue,no_marks},Table("x"=>bands[2,:,1],"y"=>bands[2,:,parameters["final_band"]])),
+    LegendEntry(L"\color{blue}{Spin $\downarrow$}")
+    ),
+    )
+    return display("image/png",plot)
+end

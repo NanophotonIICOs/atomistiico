@@ -5,4 +5,5 @@ if sys.version_info[0] == 2:
 
 
 
-from atomistiico.atomistiico import Bands
+# from atomistiico.aiico_gpaw import Bands
+from atomistiico.aiico_qe import Qe
