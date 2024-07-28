@@ -10,8 +10,17 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os  
 import xml.etree.ElementTree as ET
-plt.rcParams['text.usetex'] = True
+import subprocess
 
+try:
+    result = subprocess.run(['latex', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    print("LaTeX is correct. Versión:")
+    print(result.stdout.decode())
+    plt.rcParams['text.usetex'] = True
+except subprocess.CalledProcessError:
+        print("LaTeX is not installed.")
+except FileNotFoundError:
+        print("LaTeX is not installed.")
 
 def TeXlabel(kpt):
     if kpt == 'G':
@@ -113,14 +122,17 @@ class Qe(object):
     @property
     def get_efermi(self):
         if self.file_nscf and os.path.isfile(self.file_nscf):
-            ef = find_line(self.file_nscf, "the Fermi energy is")
-            return ef
-        elif self.file_scf and os.path.isfile(self.file_scf):
-            ef = find_line(self.file_scf, "the Fermi energy is")
-            return ef
-        else:
-            print("Neither exist SCF or NSCF files, then Ef=0!")
-            return 0
+            try:
+                ef = find_line(self.file_nscf, "the Fermi energy is")
+                return ef
+            except UnboundLocalError:
+                print("NSCF file is incompleted!")
+                if self.file_scf and os.path.isfile(self.file_scf):
+                    ef = find_line(self.file_scf, "the Fermi energy is")
+                    return ef
+                else:
+                    print("Neither exist SCF or NSCF files, then Ef=0!")
+                    return 0
         
     @property
     def edges(self):
