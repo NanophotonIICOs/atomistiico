@@ -35,7 +35,8 @@ def find_line(file,text):
             lf_value = float(line.split(" ")[-2])
             count_times+=1
             times.append([count_times,lf_value])
-    return lf_value,np.asarray(times)
+    return lf_value
+    
     
 def find_line_2(file, text):
     file_o = open(file, 'r')
@@ -111,32 +112,20 @@ class Qe(object):
 
     @property
     def get_efermi(self):
-        try:
-            if self.file_nscf and os.path.isfile(self.file_nscf):
-                ef, _ = self.find_line(self.file_nscf, "the Fermi energy is")
-                return ef
-            elif self.file_scf and os.path.isfile(self.file_scf):
-                ef, _ = self.find_line(self.file_scf, "the Fermi energy is")
-                return ef
-            else:
-                raise FileNotFoundError("Neither scf nor nscf file is found or both are empty.")
-        except FileNotFoundError as e:
-            print(e)
-            ef = 0
+        if self.file_nscf and os.path.isfile(self.file_nscf):
+            ef = find_line(self.file_nscf, "the Fermi energy is")
             return ef
-        except AttributeError as e:
-            print("File attributes are not set properly:", e)
-            ef = 0
+        elif self.file_scf and os.path.isfile(self.file_scf):
+            ef = find_line(self.file_scf, "the Fermi energy is")
             return ef
-        except Exception as e:
-            print("An unexpected error occurred:", e)
-            ef = 0
-            return ef
+        else:
+            print("Neither exist SCF or NSCF files, then Ef=0!")
+            return 0
         
     @property
     def edges(self):
         k, bands = self.get_bands
-        ef = self.get_efermi
+        ef       = self.get_efermi
         nbands =bands - ef
         cb = []
         vb = []
@@ -215,6 +204,8 @@ class Qe(object):
             klabels          = [TeXlabel(i) for i in self.path_kpts]
             ekn_array[:,:,0] = k
             edges =self.edges
+            cbm     = edges.cb
+            vbm     = edges.vb
             cb_edge = edges.cb_edge
             vb_edge = edges.vb_edge
             cb_min_point = edges.cb_edge_point
@@ -232,6 +223,8 @@ class Qe(object):
                                    'klabels'        : klabels,
                                    'energies_dim'   : ekn_array.shape,
                                    'nbnd'           : nbnd,
+                                   'cbm'            : cbm.tolist(),
+                                   'vbm'            : vbm.tolist(),
                                    'cbm_edge'       : cb_edge.tolist(),
                                    'vbm_edge'       : vb_edge.tolist(),
                                    'cbm_point'      : cb_min_point,
