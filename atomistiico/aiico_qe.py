@@ -191,7 +191,7 @@ class Qe(object):
         ax.set_xticks(ticks=self.get_kpoints,labels=[ i for i in klabels])
         ax.axhline(0,c='k',ls='--',lw=0.5,alpha=0.5)
         ax.set_xlim(xmin,xmax)
-        ax.set_ylabel(r"\bf{E (eV)}")
+        ax.set_ylabel("$E-E_f$ (eV)")
         
         if show_Eg==True:
             edges =self.edges
@@ -266,6 +266,7 @@ class Qe(object):
         
         epsr_files = sorted(glob.glob(f"{self.eps_data}/epsr*.dat"))
         epsi_files = sorted(glob.glob(f"{self.eps_data}/epsi*.dat"))
+        
         if not epsr_files or not epsi_files  :
             print(f"There are not epsilon files in: {self.eps_data}")
         else:
@@ -297,8 +298,11 @@ class Qe(object):
             npepsiy =np.vstack((np.array(epsi[0][:,0]),np.asarray(epsiy_exp2tex))).T
             npepsiz =np.vstack((np.array(epsi[0][:,0]),np.asarray(epsiz_exp2tex))).T
                 
+                
+            epsr_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in epsr_files]
+            epsi_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in epsi_files]
             class return_epsilon:
-                def __init__(self, epsr,epsi,epsr_files,epsi_files,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz):
+                def __init__(self, epsr,epsi,epsr_files,epsi_files,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels):
                     self.epsr = epsr
                     self.epsi = epsi
                     self.epsr_files = epsr_files
@@ -309,9 +313,60 @@ class Qe(object):
                     self.npepsix = npepsix
                     self.npepsiy = npepsiy
                     self.npepsiz = npepsiz
-            return return_epsilon(epsr,epsi,epsr_files,epsi_files,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz)
+                    self.epsr_labels = epsr_labels
+                    self.epsi_labels = epsi_labels
+            return return_epsilon(epsr,epsi,epsr_files,epsi_files,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels)
 
+    
+    def plot_eps(self,fig,ymin=None,ymax=None,lw=2,yshift=0,**kwargs):
+        geps = self.get_eps
+        epsrx = geps.npepsrx
+        epsry = geps.npepsry
+        epsrz = geps.npepsrz
+        epsix = geps.npepsix
+        epsiy = geps.npepsiy
+        epsiz = geps.npepsiz
+        epsr_labels = geps.epsr_labels
+        epsi_labels = geps.epsi_labels
 
-    
-    
-    
+        gs = fig.add_gridspec(3, hspace=0)
+        axs = gs.subplots(sharex=True, sharey=False)
+        
+        import matplotlib.colors as mcolors
+        from matplotlib.collections import LineCollection
+        import matplotlib.cm as cm
+        colors = mcolors._colors_full_map
+
+        cmap_x =  plt.colormaps['cool'] 
+        cmap_y =  plt.colormaps['summer']       
+        
+        for p in range(1,epsrx.shape[1]):
+            color_x = cmap_x(p / epsrx.shape[1])
+            axs[0].plot(epsrx[:,0],epsrx[:,p],color=color_x,label=f"Re-{epsr_labels[p-1]}-x")
+            
+        for p in range(1,epsry.shape[1]):   
+            color_y = cmap_y(p / epsry.shape[1])
+            axs[0].plot(epsry[:,0],epsry[:,p],color=color_y,label=f"Re-{epsr_labels[p-1]}-y")
+        
+        for p in range(1,epsrx.shape[1]):
+            color_x = cmap_x(p / epsrx.shape[1])
+            axs[1].plot(epsix[:,0],epsix[:,p],color=color_x,label=f"Im-{epsi_labels[p-1]}-x")
+            
+        for p in range(1,epsry.shape[1]):
+            color_y = cmap_y(p / epsry.shape[1])
+            axs[1].plot(epsiy[:,0],epsiy[:,p],color=color_y,label=f"Im-{epsi_labels[p-1]}-y")
+            
+        for p in range(1,epsrz.shape[1]):
+            color_x = cmap_x(p / epsrz.shape[1])
+            axs[2].plot(epsrz[:,0],epsrz[:,p],color=color_x,label=f"Re-{epsr_labels[p-1]}-z")
+            
+        for p in range(1,epsiz.shape[1]):   
+            color_y = cmap_y(p / epsiz.shape[1])
+            axs[2].plot(epsiz[:,0],epsiz[:,p],color=color_y,label=f"Im-{epsi_labels[p-1]}-z")
+        
+        for ax in axs:
+            ax.set_xlim([1,8])
+            ax.set_ylabel("$\epsilon$ $(\omega)$")
+            ax.legend(ncol=2,loc=1,frameon=False)
+            
+        axs[2].set_xlabel("Energy (eV)")
