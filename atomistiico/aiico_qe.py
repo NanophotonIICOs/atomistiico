@@ -14,8 +14,7 @@ import subprocess
 
 try:
     result = subprocess.run(['latex', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-    print("LaTeX is correct. Versión:")
-    print(result.stdout.decode())
+    print("LaTeX is correct.")
     plt.rcParams['text.usetex'] = True
 except subprocess.CalledProcessError:
         print("LaTeX is not installed.")
@@ -56,7 +55,6 @@ def find_line_2(file, text):
             return line.strip()
         
         
-        
 def try_open_file(path, error_message):
     try:
         return ET.parse(path)
@@ -71,19 +69,25 @@ def try_glob_file(pattern, error_message):
         print(f"{error_message}")
         return None
 
+def try_glob_files(pattern, error_message):
+    try:
+        return glob.glob(pattern)
+    except IndexError:
+        print(f"{error_message}")
+        return None
 
 class Qe(object):
     def __init__(self,
                  prefix,
-                 out_data='.',
                  out_files='.',
-                 eps_data='.',
+                 band_files='.',
+                 eps_files='.',
                  path_kpts=[],
                  nspin=1):
         self.prefix = prefix
-        self.out_data = out_data
+        self.band_files = band_files
         self.out_files = out_files
-        self.eps_data  = eps_data
+        self.eps_files  = eps_files
         self.nspin = nspin
         self.path_kpts = path_kpts
         self.xc_kpts = []           
@@ -91,6 +95,10 @@ class Qe(object):
         self.file_nscf = try_glob_file(f'{self.out_files}/{self.prefix}*.nscf.pw.out', "Error to import NSCF file!")
         print(f"SCF file:{self.file_scf}")
         print(f"NSCF file:{self.file_nscf}")
+        self.epsr_files = sorted(try_glob_files(f"{self.eps_files}/epsr*.dat", "Error to import Epsilon real file!"))
+        self.epsi_files = sorted(try_glob_files(f"{self.eps_files}/epsi*.dat", "Error to import Epsilon imaginary file!"))
+        print(f"Eps Re files:{self.epsr_files}")
+        print(f"Eps Im files:{self.epsi_files}")
 
     @property
     def get_kpoints(self):
@@ -112,7 +120,7 @@ class Qe(object):
     @property
     def get_bands(self):
         if self.nspin == 1:
-            file = try_glob_file(f"{self.out_data}/{self.prefix}*.bands.gnu", "Gnu file out doesn't exist")
+            file = try_glob_file(f"{self.band_files}/{self.prefix}*.bands.gnu", "Gnu file out doesn't exist")
             data_import = np.loadtxt(file)
             k = np.unique(data_import[:, 0])
             bands = np.reshape(data_import[:, 1], (-1, len(k)))
@@ -121,12 +129,11 @@ class Qe(object):
 
     @property
     def get_efermi(self):
-        if self.file_nscf and os.path.isfile(self.file_nscf):
-            try:
+        if self.file_nscf:
                 ef = find_line(self.file_nscf, "the Fermi energy is")
                 return ef
-            except UnboundLocalError:
-                print("NSCF file is incompleted!")
+        else:
+                print("NSCF file is incompleted or doesn't exist!")
                 if self.file_scf and os.path.isfile(self.file_scf):
                     ef = find_line(self.file_scf, "the Fermi energy is")
                     return ef
@@ -134,44 +141,45 @@ class Qe(object):
                     print("Neither exist SCF or NSCF files, then Ef=0!")
                     return 0
         
-    @property
-    def edges(self):
+    def edges(self,npoints_edge=25):
         k, bands = self.get_bands
         ef       = self.get_efermi
         nbands =bands - ef
         cb = []
         vb = []
         for i in range(len(nbands)):
-            if min(nbands[i])>0:
+            if min(nbands[i])>0.5:
                 cb.append(nbands[i])
-            if max(nbands[i])<0:
+            if max(nbands[i])<0.5:
                 vb.append(nbands[i])
         cb = np.array(cb)
         vb = np.array(vb)
-        cbmin_index = np.argmin(cb)
-        vbmax_index = np.argmin(vb)
+        cbm = cb[0,:]
+        vbm = vb[-1,:]
+        cbmin_index = cb[0].argmin()
+        vbmax_index = vb[-1].argmax()
         cbmin = cb[0,:][cbmin_index]
         vbmax = vb[-1,:][vbmax_index]
-        n = 7
-        cb_edge = np.array([k[cbmin_index-n:cbmin_index+n],cb[0,cbmin_index-n:cbmin_index+n]]) 
-        vb_edge = np.array([k[vbmax_index-n:vbmax_index+n],vb[-1,vbmax_index-n:vbmax_index+n]])
-        cb_edge_point = [k[cbmin_index],cbmin]
-        vb_edge_point = [k[vbmax_index],vbmax]
+        n = npoints_edge
+        cbm_edge = np.array([k[cbmin_index-n:cbmin_index+n],cb[0,cbmin_index-n:cbmin_index+n]]) 
+        vbm_edge = np.array([k[vbmax_index-n:vbmax_index+n],vb[-1,vbmax_index-n:vbmax_index+n]])
+        cbm_point = [k[cbmin_index],cbmin]
+        vbm_point = [k[vbmax_index],vbmax]
         
         class edge:
-            def __init__(self, cb,vb,cb_edge, vb_edge,cb_edge_point,vb_edge_point,cbmin,vbmax):
-                self.cb = cb[0,:]
-                self.vb = vb[-1,:]
-                self.cb_edge = cb_edge.T
-                self.vb_edge = vb_edge.T
-                self.cb_edge_point = cb_edge_point
-                self.vb_edge_point = vb_edge_point
+            def __init__(self, cbm,vbm,cbm_edge, vbm_edge,cbm_point,vbm_point,cbmin,vbmax):
+                self.cbm = cb[0,:]
+                self.vbm = vb[-1,:]
+                self.cbm_edge = cbm_edge.T
+                self.vbm_edge = vbm_edge.T
+                self.cbm_point = cbm_point
+                self.vbm_point = vbm_point
                 self.cbmin = cbmin
                 self.vbmax = vbmax
                 
-        return edge(cb,vb,cb_edge, vb_edge,cb_edge_point,vb_edge_point,cbmin,vbmax)
+        return edge(cb,vb,cbm_edge, vbm_edge,cbm_point,vbm_point,cbmin,vbmax)
 
-    def plot_bands(self, ax, ymin=None, ymax=None, color="b", ls="-", lw=2, yshift=0, alpha=1,show_Eg=False, **kwargs):
+    def plot_bands(self, ax, ymin=None, ymax=None, color="b", ls="-", lw=2, yshift=0, alpha=1,show_Eg=False,npoints_edge=25, **kwargs):
         """
         Plot band structure
         """
@@ -194,19 +202,19 @@ class Qe(object):
         ax.set_ylabel("$E-E_f$ (eV)")
         
         if show_Eg==True:
-            edges =self.edges
-            cb = edges.cb_edge
-            vb = edges.vb_edge
-            cb_min_point = edges.cb_edge_point
-            vb_max_point = edges.vb_edge_point
-            ax.plot(cb[:,0],cb[:,1],'bo',ms=3)
-            ax.plot(vb[:,0],vb[:,1],'bo',ms=3)
-            ax.plot(cb_min_point[0],cb_min_point[1],'ob')
-            ax.plot(vb_max_point[0],vb_max_point[1],'ob')
+            edges =self.edges(npoints_edge=npoints_edge)
+            cbm = edges.cbm_edge
+            vbm = edges.vbm_edge
+            cbm_point = edges.cbm_point
+            vbm_point = edges.vbm_point
+            ax.plot(cbm[:,0],cbm[:,1],'bo',ms=3)
+            ax.plot(vbm[:,0],vbm[:,1],'bo',ms=3)
+            ax.plot(cbm_point[0],cbm_point[1],'ob')
+            ax.plot(vbm_point[0],vbm_point[1],'ob')
 
 
         
-    def exportdata(self,filename,dirsave='.'):
+    def exportdata(self,filename,dirsave='.',npoint_edges=25):
             k,bands          = self.get_bands
             ef               = self.get_efermi
             nbnd,klen        = bands.shape
@@ -215,13 +223,13 @@ class Qe(object):
             ekn_array        = np.zeros((self.nspin,klen,nbnd+1))
             klabels          = [TeXlabel(i) for i in self.path_kpts]
             ekn_array[:,:,0] = k
-            edges =self.edges
-            cbm     = edges.cb
-            vbm     = edges.vb
-            cb_edge = edges.cb_edge
-            vb_edge = edges.vb_edge
-            cb_min_point = edges.cb_edge_point
-            vb_max_point = edges.vb_edge_point
+            edges = self.edges(npoint_edges)
+            cbm     = edges.cbm
+            vbm     = edges.vbm
+            cbm_edge = edges.cbm_edge
+            vbm_edge = edges.vbm_edge
+            cbm_point = edges.cbm_point
+            vbm_point = edges.vbm_point
             
             for spin in range(self.nspin):
                 ekn_array[spin,:,1:] = energies.T
@@ -237,12 +245,34 @@ class Qe(object):
                                    'nbnd'           : nbnd,
                                    'cbm'            : cbm.tolist(),
                                    'vbm'            : vbm.tolist(),
-                                   'cbm_edge'       : cb_edge.tolist(),
-                                   'vbm_edge'       : vb_edge.tolist(),
-                                   'cbm_point'      : cb_min_point,
-                                   'vbm_point'      : vb_max_point
+                                   'cbm_edge'       : cbm_edge.tolist(),
+                                   'vbm_edge'       : vbm_edge.tolist(),
+                                   'cbm_point'      : cbm_point,
+                                   'vbm_point'      : vbm_point,
                                    } 
-            
+            if not self.epsr_files or not self.epsi_files  :
+                pass
+            else:
+                geps = self.get_eps
+                epsrx = geps.npepsrx
+                epsry = geps.npepsry
+                epsrz = geps.npepsrz
+                epsix = geps.npepsix
+                epsiy = geps.npepsiy
+                epsiz = geps.npepsiz
+                epsr_labels = geps.epsr_labels
+                epsi_labels = geps.epsi_labels
+                results.update({
+                                'epsrx' : epsrx.tolist(),
+                                'epsry' : epsry.tolist(),
+                                'epsrz' : epsrz.tolist(),
+                                'epsix' : epsix.tolist(),
+                                'epsiy' : epsiy.tolist(),
+                                'epsiz' : epsiz.tolist(),
+                                'epsr_labels' : epsr_labels,
+                                'epsi_labels' : epsi_labels
+                })
+                
             
             from .utils.atomistiico_io import calc2json
             try:
@@ -255,24 +285,19 @@ class Qe(object):
     def get_eps(self):
         epsr=[ ]
         epsi=[ ]
-        epsr_files=[ ]
-        epsi_files=[ ]
         epsrx_exp2tex = [ ]
         epsix_exp2tex = [ ]
         epsry_exp2tex = [ ]
         epsiy_exp2tex = [ ]
         epsrz_exp2tex = [ ]
         epsiz_exp2tex = [ ]
-        
-        epsr_files = sorted(glob.glob(f"{self.eps_data}/epsr*.dat"))
-        epsi_files = sorted(glob.glob(f"{self.eps_data}/epsi*.dat"))
-        
-        if not epsr_files or not epsi_files  :
-            print(f"There are not epsilon files in: {self.eps_data}")
+    
+        if not self.epsr_files or not self.epsi_files  :
+            print(f"There are not epsilon files in: {self.eps_files}")
         else:
-            for i,j in zip(epsr_files,epsi_files):
-                epsr_i = np.loadtxt(i, unpack=True, comments='#',skiprows=5)
-                epsi_j = np.loadtxt(j, unpack=True, comments='#',skiprows=5)
+            for i,j in zip(self.epsr_files,self.epsi_files):
+                epsr_i = np.loadtxt(i, unpack=True, comments='#',skiprows=10)
+                epsi_j = np.loadtxt(j, unpack=True, comments='#',skiprows=10)
                 epsr.append(epsr_i.T)
                 epsi.append(epsi_j.T)
         
@@ -290,23 +315,22 @@ class Qe(object):
                 epsiy_exp2tex.append(epsiy)
                 epsiz_exp2tex.append(epsiz)
                 
-            npepsrx =np.vstack((np.array(epsr[0][:,0]),np.asarray(epsrx_exp2tex))).T
-            npepsry =np.vstack((np.array(epsr[0][:,0]),np.asarray(epsry_exp2tex))).T
-            npepsrz =np.vstack((np.array(epsr[0][:,0]),np.asarray(epsrz_exp2tex))).T
+            eps_energies = np.asarray(epsr[0][:,0])
+            npepsrx =np.vstack((eps_energies,np.asarray(epsrx_exp2tex))).T
+            npepsry =np.vstack((eps_energies,np.asarray(epsry_exp2tex))).T
+            npepsrz =np.vstack((eps_energies,np.asarray(epsrz_exp2tex))).T
 
-            npepsix =np.vstack((np.array(epsi[0][:,0]),np.asarray(epsix_exp2tex))).T
-            npepsiy =np.vstack((np.array(epsi[0][:,0]),np.asarray(epsiy_exp2tex))).T
-            npepsiz =np.vstack((np.array(epsi[0][:,0]),np.asarray(epsiz_exp2tex))).T
+            npepsix =np.vstack((eps_energies,np.asarray(epsix_exp2tex))).T
+            npepsiy =np.vstack((eps_energies,np.asarray(epsiy_exp2tex))).T
+            npepsiz =np.vstack((eps_energies,np.asarray(epsiz_exp2tex))).T
                 
-                
-            epsr_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in epsr_files]
-            epsi_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in epsi_files]
+            epsr_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in self.epsr_files]
+            epsi_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in self.epsi_files]
             class return_epsilon:
-                def __init__(self, epsr,epsi,epsr_files,epsi_files,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels):
+                def __init__(self, epsr,epsi,eps_energies,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels):
                     self.epsr = epsr
                     self.epsi = epsi
-                    self.epsr_files = epsr_files
-                    self.epsi_files = epsi_files
+                    self.eps_energies = eps_energies
                     self.npepsrx = npepsrx
                     self.npepsry = npepsry
                     self.npepsrz = npepsrz
@@ -315,7 +339,7 @@ class Qe(object):
                     self.npepsiz = npepsiz
                     self.epsr_labels = epsr_labels
                     self.epsi_labels = epsi_labels
-            return return_epsilon(epsr,epsi,epsr_files,epsi_files,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels)
+            return return_epsilon(epsr,epsi,eps_energies,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels)
 
     
     def plot_eps(self,fig,ymin=None,ymax=None,lw=2,yshift=0,**kwargs):
@@ -340,13 +364,14 @@ class Qe(object):
         cmap_x =  plt.colormaps['cool'] 
         cmap_y =  plt.colormaps['summer']       
         
-        for p in range(1,epsrx.shape[1]):
-            color_x = cmap_x(p / epsrx.shape[1])
-            axs[0].plot(epsrx[:,0],epsrx[:,p],color=color_x,label=f"Re-{epsr_labels[p-1]}-x")
+        for px in range(1,epsrx.shape[1]):
+            color_x = cmap_x(px / epsrx.shape[1])
+            axs[0].plot(epsrx[:,0],epsrx[:,px],color=color_x,label=f"Re-{epsr_labels[px-1]}-x")
             
-        for p in range(1,epsry.shape[1]):   
-            color_y = cmap_y(p / epsry.shape[1])
-            axs[0].plot(epsry[:,0],epsry[:,p],color=color_y,label=f"Re-{epsr_labels[p-1]}-y")
+        for py in range(1,epsry.shape[1]):   
+            color_y = cmap_y(py / epsry.shape[1])
+            axs[0].plot(epsry[:,0],epsry[:,py],color=color_y,label=f"Re-{epsr_labels[py-1]}-y")
+        axs[0].set_ylim([-2,10])
         
         for p in range(1,epsrx.shape[1]):
             color_x = cmap_x(p / epsrx.shape[1])
@@ -370,3 +395,43 @@ class Qe(object):
             ax.legend(ncol=2,loc=1,frameon=False)
             
         axs[2].set_xlabel("Energy (eV)")
+        
+        
+        
+class Strain(object):
+    def __init__(self,structure):
+        self.structure = structure
+    
+    def uniaxial(self,strain,axis=0):
+        """
+        Aplica una deformación uniaxial a la estructura.
+        strain: valor de la deformación (positivo para tensión, negativo para compresión)
+        axis: dirección de la deformación (0 (default) para x, 1 para y, 2 para z)
+        """
+        newstr = self.structure.copy()
+        cell   =   newstr.get_cell()
+        cell[axis] *= (1 + (strain/100))
+        newstr.set_cell(cell, scale_atoms=True)
+        return newstr
+    
+    def biaxial(self,strain,axes=(0, 1)):
+        """
+        Aplica una deformación biaxial a la estructura.
+        strain: valor de la deformación (positivo para tensión, negativo para compresión)
+        axes: tupla con las dos direcciones de la deformación (por defecto, plano xy)
+        """
+        newstr = self.structure.copy()
+        cell = newstr.get_cell()
+        for axis in axes:
+            cell[axis] *= (1 + (strain/100))
+        newstr.set_cell(cell, scale_atoms=True)
+        return newstr
+    
+    def anisoxy_strain(self,strainx,strainy):
+        newstr = structure.copy()
+        cell = newstr.get_cell()
+        cell[0] *= (1 +(strainx/100))
+        cell[1] *= (1 +(strainy/100))
+        newstr.set_cell(cell, scale_atoms=True)
+        return newstr
+        
