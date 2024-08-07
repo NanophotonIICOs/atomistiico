@@ -10,7 +10,15 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os  
 import xml.etree.ElementTree as ET
-plt.rcParams['text.usetex'] = True
+
+try:
+    result = subprocess.run(['latex', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    print("LaTeX is correct.")
+    plt.rcParams['text.usetex'] = True
+except subprocess.CalledProcessError:
+        print("LaTeX is not installed.")
+except FileNotFoundError:
+        print("LaTeX is not installed.")
 
 
 def TeXlabel(kpt):
