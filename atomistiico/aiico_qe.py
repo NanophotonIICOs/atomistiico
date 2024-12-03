@@ -54,7 +54,21 @@ def find_line_2(file, text):
         if lf.search(line):
             return line.strip()
         
-        
+def find_levels(file):
+    file_o = open(file, 'r')
+    Lines = file_o.readlines()
+    for line in Lines:
+        if "highest occupied, lowest unoccupied level (ev):" in line: 
+            values = line.split()[-2::]
+            ef = (float(values[0])+float(values[1]))/2
+            break
+        elif "highest occupied level (ev):" in line: 
+            values = line.split()[-2::]
+            ef = float(values[1])
+            break
+    return ef
+
+    
 def try_open_file(path, error_message):
     try:
         return ET.parse(path)
@@ -79,32 +93,35 @@ def try_glob_files(pattern, error_message):
 class Qe(object):
     def __init__(self,
                  prefix,
-                 out_files='.',
+                 scf_files='.',
+                 nscf_files=',',
                  band_files='.',
                  eps_files='.',
                  path_kpts=[],
                  nspin=1):
         self.prefix = prefix
         self.band_files = band_files
-        self.out_files = out_files
+        self.scf_files = scf_files
+        self.nscf_files = nscf_files
         self.eps_files  = eps_files
         self.nspin = nspin
         self.path_kpts = path_kpts
         self.xc_kpts = []           
-        self.file_scf  = try_glob_file(f'{self.out_files}/{self.prefix}*.scf.pw.out', "Error to import SCF file!")
-        self.file_nscf = try_glob_file(f'{self.out_files}/{self.prefix}*.nscf.pw.out', "Error to import NSCF file!")
+        self.file_scf  = try_glob_file(f'{self.scf_files}/{self.prefix}*.scf.pw.out', "Error to import SCF file!")
+        self.file_nscf = try_glob_file(f'{self.nscf_files}/{self.prefix}*.nscf.pw.out', "Error to import NSCF file!")
+        self.file_xc = try_glob_file(f"{self.band_files}/{self.prefix}*.bands.out", "Error")
         print(f"SCF file:{self.file_scf}")
         print(f"NSCF file:{self.file_nscf}")
-        self.epsr_files = sorted(try_glob_files(f"{self.eps_files}/epsr*.dat", "Error to import Epsilon real file!"))
-        self.epsi_files = sorted(try_glob_files(f"{self.eps_files}/epsi*.dat", "Error to import Epsilon imaginary file!"))
+        print(f"BANDS file:{self.file_xc}")
+        self.epsr_files = sorted(try_glob_files(f"{self.eps_files}/epsr_*{self.prefix}.dat", "Error to import Epsilon real file!"))
+        self.epsi_files = sorted(try_glob_files(f"{self.eps_files}/epsi_*{self.prefix}.dat", "Error to import Epsilon imaginary file!"))
         print(f"Eps Re files:{self.epsr_files}")
         print(f"Eps Im files:{self.epsi_files}")
 
     @property
     def get_kpoints(self):
         try:
-            file_xc = try_glob_file(f"{self.out_files}/{self.prefix}*.bands.out", "Error")
-            self.file = open(file_xc, 'r')
+            self.file = open(self.file_xc, 'r')
             self.Lines = self.file.readlines()
             self.lf = re.compile(rf"{'x coordinate'}")
             self.xc_kpts = []
@@ -126,20 +143,62 @@ class Qe(object):
             bands = np.reshape(data_import[:, 1], (-1, len(k)))
             # dout = np.vstack((k,bands)).T
             return k, bands
+        else:
+            file = try_glob_file(f"{self.band_files}/{self.prefix}*.bands.gnu", "Gnu file out doesn't exist")
+            data_import = np.loadtxt(file)
+            k = np.unique(data_import[:, 0])
+            bands = np.reshape(data_import[:, 1], (-1, len(k)))
+            # dout = np.vstack((k,bands)).T
+            return k, bands
+            
 
     @property
     def get_efermi(self):
         if self.file_nscf:
+            try:
                 ef = find_line(self.file_nscf, "the Fermi energy is")
                 return ef
+            except UnboundLocalError:
+                try: 
+                    ef = find_levels(self.file_nscf)
+                    return ef
+                except:
+                    print("NSCF file error!")
+                    if self.file_scf and os.path.isfile(self.file_scf):
+                        ef = find_line(self.file_scf, "the Fermi energy is")
+                        return ef
+                    else:
+                        return 0
         else:
                 print("NSCF file is incompleted or doesn't exist!")
                 if self.file_scf and os.path.isfile(self.file_scf):
-                    ef = find_line(self.file_scf, "the Fermi energy is")
-                    return ef
+                    try:
+                        ef = find_line(self.file_scf, "the Fermi energy is")
+                        return ef
+                    except UnboundLocalError:
+                        ef = find_levels(self.file_scf)
+                        return ef   
                 else:
                     print("Neither exist SCF or NSCF files, then Ef=0!")
                     return 0
+                
+    @property
+    def total_energy(self):
+        if self.file_nscf:
+                tot_en = find_line(self.file_nscf, "!    total energy")
+                return tot_en*13.6057039763
+        else:
+            tot_en = find_line(self.file_scf, "!    total energy")
+            return tot_en*13.6057039763
+        
+    @property
+    def volume_cell(self):
+        if self.file_nscf:
+                vol_cell = find_line(self.file_nscf, "unit-cell volume")
+                return vol_cell*0.148185
+        else:
+            vol_cell = find_line(self.file_scf, "unit-cell volume")
+            return vol_cell*0.148185 
         
     def edges(self,npoints_edge=25):
         k, bands = self.get_bands
@@ -148,9 +207,9 @@ class Qe(object):
         cb = []
         vb = []
         for i in range(len(nbands)):
-            if min(nbands[i])>0.5:
+            if min(nbands[i])>0.05:
                 cb.append(nbands[i])
-            if max(nbands[i])<0.5:
+            if max(nbands[i])<0.05 :
                 vb.append(nbands[i])
         cb = np.array(cb)
         vb = np.array(vb)
@@ -161,25 +220,25 @@ class Qe(object):
         cbmin = cb[0,:][cbmin_index]
         vbmax = vb[-1,:][vbmax_index]
         n = npoints_edge
-        cbm_edge = np.array([k[cbmin_index-n:cbmin_index+n],cb[0,cbmin_index-n:cbmin_index+n]]) 
-        vbm_edge = np.array([k[vbmax_index-n:vbmax_index+n],vb[-1,vbmax_index-n:vbmax_index+n]])
-        cbm_point = [k[cbmin_index],cbmin]
-        vbm_point = [k[vbmax_index],vbmax]
+        cbm_edge = np.array([k[cbmin_index-n:cbmin_index+n],cb[0,cbmin_index-n:cbmin_index+n]+ef ]) 
+        vbm_edge = np.array([k[vbmax_index-n:vbmax_index+n],vb[-1,vbmax_index-n:vbmax_index+n]+ef]) 
+        cbm_point = [k[cbmin_index],cbmin+ef]
+        vbm_point = [k[vbmax_index],vbmax+ef]
         
         class edge:
             def __init__(self, cbm,vbm,cbm_edge, vbm_edge,cbm_point,vbm_point,cbmin,vbmax):
-                self.cbm = cb[0,:]
-                self.vbm = vb[-1,:]
+                self.cbm = cb[0,:]+ef
+                self.vbm = vb[-1,:]+ef
                 self.cbm_edge = cbm_edge.T
-                self.vbm_edge = vbm_edge.T
-                self.cbm_point = cbm_point
-                self.vbm_point = vbm_point
-                self.cbmin = cbmin
-                self.vbmax = vbmax
+                self.vbm_edge = vbm_edge.T 
+                self.cbm_point = cbm_point 
+                self.vbm_point = vbm_point  
+                self.cbmin = cbmin 
+                self.vbmax = vbmax 
                 
         return edge(cb,vb,cbm_edge, vbm_edge,cbm_point,vbm_point,cbmin,vbmax)
 
-    def plot_bands(self, ax, ymin=None, ymax=None, color="b", ls="-", lw=2, yshift=0, alpha=1,show_Eg=False,npoints_edge=25, **kwargs):
+    def plot_bands(self, ax, ymin=None, ymax=None, color="b", ls="-", lw=2, alpha=1,show_Eg=False,npoints_edge=25, **kwargs):
         """
         Plot band structure
         """
@@ -188,7 +247,7 @@ class Qe(object):
         xmax = np.max(k)
         ef = self.get_efermi
         for band in range(len(bands)):
-            ax.plot(k, bands[band, :]-ef+yshift, color=color, ls=ls, lw=lw, alpha=alpha, **kwargs)
+            ax.plot(k, bands[band, :]-ef, color=color, ls=ls, lw=lw, alpha=alpha, **kwargs)
 
         ax.set_ylim(ymin, ymax)
         for i in self.get_kpoints:
@@ -207,10 +266,10 @@ class Qe(object):
             vbm = edges.vbm_edge
             cbm_point = edges.cbm_point
             vbm_point = edges.vbm_point
-            ax.plot(cbm[:,0],cbm[:,1],'bo',ms=3)
-            ax.plot(vbm[:,0],vbm[:,1],'bo',ms=3)
-            ax.plot(cbm_point[0],cbm_point[1],'ob')
-            ax.plot(vbm_point[0],vbm_point[1],'ob')
+            ax.plot(cbm[:,0],cbm[:,1]-ef,'bo',ms=3)
+            ax.plot(vbm[:,0],vbm[:,1]-ef,'bo',ms=3)
+            ax.plot(cbm_point[0],cbm_point[1]-ef,'ob')
+            ax.plot(vbm_point[0],vbm_point[1]-ef,'ob')
 
 
         
@@ -223,6 +282,8 @@ class Qe(object):
             ekn_array        = np.zeros((self.nspin,klen,nbnd+1))
             klabels          = [TeXlabel(i) for i in self.path_kpts]
             ekn_array[:,:,0] = k
+            tot_en           = self.total_energy 
+            vol_cell         = self.volume_cell
             edges = self.edges(npoint_edges)
             cbm     = edges.cbm
             vbm     = edges.vbm
@@ -249,6 +310,9 @@ class Qe(object):
                                    'vbm_edge'       : vbm_edge.tolist(),
                                    'cbm_point'      : cbm_point,
                                    'vbm_point'      : vbm_point,
+                                   'tot_en'         : tot_en,
+                                   'vol_cell'       : vol_cell,
+                                   'ef'             : ef
                                    } 
             if not self.epsr_files or not self.epsi_files  :
                 pass
@@ -270,7 +334,7 @@ class Qe(object):
                                 'epsiy' : epsiy.tolist(),
                                 'epsiz' : epsiz.tolist(),
                                 'epsr_labels' : epsr_labels,
-                                'epsi_labels' : epsi_labels
+                                'epsi_labels' : epsi_labels,
                 })
                 
             
@@ -279,7 +343,47 @@ class Qe(object):
                 calc2json(results,filename,dirsave)
             except ValueError:
                 print(f"Can't created {dirsave}/{filename}!")
-
+                
+    def exportdata_eps(self,filename,dirsave='.'):    
+            results: Dict[str, Any] = {
+                                   'name'           : self.prefix,
+                                   } 
+            if not self.epsr_files or not self.epsi_files  :
+                pass
+            else:
+                geps        = self.get_eps
+                eps_en      = geps.eps_energies
+                epsrx       = geps.npepsrx
+                epsry       = geps.npepsry
+                epsrz       = geps.npepsrz
+                epsix       = geps.npepsix
+                epsiy       = geps.npepsiy
+                epsiz       = geps.npepsiz
+                epsr_labels = geps.epsr_labels
+                epsi_labels = geps.epsi_labels
+                alphax      = geps.alphax
+                alphay      = geps.alphay
+                alphaz      = geps.alphaz
+                results.update({
+                                'epsrx' : epsrx.tolist(),
+                                'epsry' : epsry.tolist(),
+                                'epsrz' : epsrz.tolist(),
+                                'epsix' : epsix.tolist(),
+                                'epsiy' : epsiy.tolist(),
+                                'epsiz' : epsiz.tolist(),
+                                'epsr_labels' : epsr_labels,
+                                'epsi_labels' : epsi_labels,
+                                'eps_energies': eps_en.tolist(),
+                                'alphax' : alphax.tolist(), 
+                                'alphay' : alphay.tolist(),
+                                'alphaz' : alphaz.tolist(),
+                })
+            from .utils.atomistiico_io import calc2json
+            try:
+                calc2json(results,filename,dirsave)
+            except ValueError:
+                print(f"Can't created {dirsave}/{filename}!")
+                
     # optical properties:
     @property
     def get_eps(self):
@@ -323,11 +427,21 @@ class Qe(object):
             npepsix =np.vstack((eps_energies,np.asarray(epsix_exp2tex))).T
             npepsiy =np.vstack((eps_energies,np.asarray(epsiy_exp2tex))).T
             npepsiz =np.vstack((eps_energies,np.asarray(epsiz_exp2tex))).T
-                
+            
+            # alpha
+            c         = 2.99792458  # (10^8 m/s)
+            hbar      = 6.582119569 # (10^{-16} eV.s)
+            #hbar      = 6.582119569E-16  
+            alphapref = 2/(hbar*c)  # (10^8 / m or 10^6 / cm) 
+            lB        = 20/1.55612398   # scaling factor for monolayer
+            alphax  = alphapref * eps_energies * np.sqrt((np.sqrt((lB*npepsrx[:,1])**2+(lB*npepsix[:,1])**2)-(lB*npepsrx[:,1]))/2)
+            alphay  = alphapref * eps_energies * np.sqrt((np.sqrt((lB*npepsry[:,1])**2+(lB*npepsiy[:,1])**2)-(lB*npepsry[:,1]))/2)
+            alphaz  = alphapref * eps_energies * np.sqrt((np.sqrt((lB*npepsrz[:,1])**2+(lB*npepsiz[:,1])**2)-(lB*npepsrz[:,1]))/2)
+                            
             epsr_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in self.epsr_files]
             epsi_labels = [i.split("/")[-1].split(".dat")[0].split('-')[-1] for i in self.epsi_files]
             class return_epsilon:
-                def __init__(self, epsr,epsi,eps_energies,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels):
+                def __init__(self, epsr,epsi,eps_energies,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels,alphax,alphay,alphaz):
                     self.epsr = epsr
                     self.epsi = epsi
                     self.eps_energies = eps_energies
@@ -339,10 +453,12 @@ class Qe(object):
                     self.npepsiz = npepsiz
                     self.epsr_labels = epsr_labels
                     self.epsi_labels = epsi_labels
-            return return_epsilon(epsr,epsi,eps_energies,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels)
+                    self.alphax = alphax
+                    self.alphay = alphay
+                    self.alphaz = alphaz
+            return return_epsilon(epsr,epsi,eps_energies,npepsrx,npepsry,npepsrz,npepsix,npepsiy,npepsiz,epsr_labels,epsi_labels,alphax,alphay,alphaz)
 
-    
-    def plot_eps(self,fig,ymin=None,ymax=None,lw=2,yshift=0,**kwargs):
+    def plot_eps(self,fig,ymin=None,ymax=None,xmin=None,xmax=None,lw=2,yshift=0,**kwargs):
         geps = self.get_eps
         epsrx = geps.npepsrx
         epsry = geps.npepsry
@@ -371,7 +487,6 @@ class Qe(object):
         for py in range(1,epsry.shape[1]):   
             color_y = cmap_y(py / epsry.shape[1])
             axs[0].plot(epsry[:,0],epsry[:,py],color=color_y,label=f"Re-{epsr_labels[py-1]}-y")
-        axs[0].set_ylim([-2,10])
         
         for p in range(1,epsrx.shape[1]):
             color_x = cmap_x(p / epsrx.shape[1])
@@ -390,11 +505,13 @@ class Qe(object):
             axs[2].plot(epsiz[:,0],epsiz[:,p],color=color_y,label=f"Im-{epsi_labels[p-1]}-z")
         
         for ax in axs:
-            ax.set_xlim([1,8])
+            ax.set_xlim([xmin,xmax])
+            ax.set_ylim([ymin,ymax])
             ax.set_ylabel("$\epsilon$ $(\omega)$")
             ax.legend(ncol=2,loc=1,frameon=False)
             
         axs[2].set_xlabel("Energy (eV)")
+        return axs
         
         
         

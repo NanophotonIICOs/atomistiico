@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='atomistiico',
-    version='0.1',
+    version='0.2',
     description='Repository to analyzing atomistic simulations from DFTs and many-body quantum models',
     author='O. Ruiz-Cigarrillo',
     author_email='ruizoscar.1393@gmail.com',
@@ -19,7 +19,6 @@ setup(
         'spglib',
         'ase',
         'gpaw',
-        'pyiron',
         'numba',
         'Ipython',
         'tabulate',
@@ -30,7 +29,6 @@ setup(
         'peakutils',
         'py3dmol',
         'ipympl',
-        'plotly==5.13.1',
     ],
 )
 
