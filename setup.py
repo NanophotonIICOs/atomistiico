@@ -27,7 +27,6 @@ setup(
         'ipykernel',
         'specutils',
         'peakutils',
-        'py3dmol',
         'ipympl',
     ],
 )
