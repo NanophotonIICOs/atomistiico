@@ -2,7 +2,7 @@
 
 Welcome to the AtomistIICO Repository!
 
-This repository aims to provide a comprehensive collection of scripts for Quantum Espresso and GPAW, designed to facilitate the post-processing of data from computational physics and materials science simulations.
+This repository aims to provide a comprehensive collection of scripts for Quantum Espresso, YAMBO and GPAW, designed to facilitate the post-processing of data from computational physics and materials science simulations.
 
 ## Objectives
 
