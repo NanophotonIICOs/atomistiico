@@ -1,17 +1,31 @@
-# AtomistIICO Repository Overview
+<img align="left" src="https://github.com/NanophotonIICOs/.github/blob/main/profile/images/Escudo.png">
+<img align="right" src="https://github.com/NanophotonIICOs/.github/blob/main/profile/images/uaslp-1.png">
+<br><br><br><br><br><br>
 
-Welcome to the AtomistIICO Repository!
+# Welcome to the AtomistIICO Repository!
 
-This repository aims to provide a comprehensive collection of scripts for Quantum Espresso, YAMBO and GPAW, designed to facilitate the post-processing of data from computational physics and materials science simulations.
+This repository provides a curated collection of scripts for **Quantum ESPRESSO**, **YAMBO**, and **GPAW**, designed to facilitate the post-processing of data from condensed matter and materials science simulations.
 
 ## Objectives
 
-The primary objectives of this repository are:
-* To Share Useful Scripts: A curated set of scripts tailored for Quantum Espresso and GPAW users.
-* To Streamline Post-Processing: Simplify and enhance the post-processing steps involved in computational data analysis.
-* To Foster Collaboration: Encourage collaboration and contributions from the community to expand and improve the script collection.
+The primary goals of this repository are:
+* **Share useful scripts** – ready-to-use tools tailored for Quantum ESPRESSO, YAMBO, and GPAW users.
+* **Streamline post-processing** – simplify and enhance workflows for analyzing computational data.
+* **Foster collaboration** – encourage contributions from the community to expand and improve the collection.
 
 
-## Acknowledgments
+<h2>Acknowledgments</h2>
 
-The authors thankfully acknowledge the computer resources, technical expertise and support provided by the Laboratorio Nacional de Supercómputo del Sureste de México, CONACYT member of the network of national laboratories.
+<p>We gratefully acknowledge the support provided by:</p>
+
+<div style="display: flex; align-items: center; gap: 40px; flex-wrap: wrap;">
+  <div style="text-align: center;">
+    <img src="https://secihti.mx/wp-content/uploads/2024/12/logotipo_SCyT_color_803x97px_v02.svg" alt="SECTIHI Logo" style="height: 80px;">
+    <p><strong>Secretaría de Ciencia, Humanidades, Tecnología e Innovación</strong></p>
+  </div>
+  
+  <div style="text-align: center;">
+    <img src="http://registro.lnsa.buap.mx/imagenes/LNS.png" alt="LNS Logo" style="height: 80px;">
+    <p><strong>Laboratorio Nacional de Supercómputo del Sureste de México</strong></p>
+  </div>
+</div>
