@@ -20,7 +20,7 @@ The primary goals of this repository are:
 
 <div style="display: flex; align-items: center; gap: 40px; flex-wrap: wrap;">
   <div style="text-align: center;">
-    <img src="https://secihti.mx/wp-content/uploads/2024/12/logotipo_SCyT_color_803x97px_v02.svg" alt="SECTIHI Logo" style="height: 80px;">
+    <img src="https://secihti.mx/wp-content/uploads/2025/03/logo_secihti_vertical_color.svg" alt="SECTIHI Logo" style="height: 80px;">
     <p><strong>Secretaría de Ciencia, Humanidades, Tecnología e Innovación</strong></p>
   </div>
   
